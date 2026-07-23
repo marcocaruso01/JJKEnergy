@@ -1,0 +1,30 @@
+JJK ENERGY V35 · REPORT DI VERIFICA
+====================================
+
+Data: 23 luglio 2026
+Versione: 35.0.0 · Cinematic Nexus
+
+CONTROLLI SUPERATI
+------------------
+
+[OK] Sintassi dei 21 file JavaScript.
+[OK] Sintassi dei 3 script inline di index.html.
+[OK] Nessun ID HTML duplicato.
+[OK] Nessun riferimento locale o asset statico mancante.
+[OK] Struttura CSS con delimitatori bilanciati.
+[OK] Nove ritratti WebP presenti.
+[OK] Nove famiglie di aura presenti e univoche.
+[OK] Vecchi nodi e ciclo RAF del carosello 3D rimossi.
+[OK] Un solo foglio V35 applicato, con preload anticipato.
+[OK] Controllo versione attivo nelle scritture multiplayer.
+[OK] Volume SFX e musica persistenti, incluso il valore 0.
+[OK] Loader saltabile e fallback automatico di sicurezza.
+[OK] Risposte HTTP 200 per index, CSS V35, JS V35, multiplayer,
+     sfondo cinematografico e ritratto di prova.
+
+NOTE
+----
+
+I controlli online reali richiedono un progetto Supabase configurato,
+account validi e almeno due client. La V35 mantiene le RPC esistenti e
+aggiunge protezioni lato client senza cambiare lo schema del database.

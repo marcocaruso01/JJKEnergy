@@ -1,0 +1,254 @@
+/* ============================================================
+   JJK ENERGY V33 — REBUILD CLEAN
+   Interfaccia ricostruita sulla V27 originale.
+   Nessuna regola, tecnica, costo o progressione modificata.
+   ============================================================ */
+
+:root{
+  --v33-bg:#07050b;
+  --v33-panel:rgba(15,11,22,.94);
+  --v33-panel-2:rgba(9,7,14,.97);
+  --v33-line:rgba(255,255,255,.11);
+  --v33-blue:#64c8ff;
+  --v33-violet:#9b67ff;
+  --v33-pink:#ff4f79;
+}
+
+html,body{max-width:100%;overflow-x:hidden}
+.screen.active{animation:v33ScreenIn .22s ease-out}
+@keyframes v33ScreenIn{from{opacity:.55;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ======================== HOME ======================== */
+#home.home.active{
+  position:relative!important;
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:100svh!important;
+  height:auto!important;
+  padding:88px clamp(18px,4vw,64px) 44px!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  text-align:left!important;
+  background:#050308!important;
+}
+#home.home.active::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:-3;
+  background:
+    linear-gradient(90deg,rgba(3,2,6,.88) 0%,rgba(3,2,6,.48) 45%,rgba(3,2,6,.76) 100%),
+    linear-gradient(180deg,rgba(3,2,6,.28),rgba(3,2,6,.80)),
+    url('assets/home_cinematic_clean.webp') center/cover no-repeat;
+}
+#home.home.active::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 72% 22%,rgba(91,177,255,.14),transparent 30%),
+    radial-gradient(circle at 22% 78%,rgba(159,80,255,.14),transparent 30%);
+}
+
+/* Disattivazione totale delle vecchie profondità 3D: causa principale dei problemi Safari */
+#home .home-ambient,
+#home .home-portal,
+#home .home-3d-backdrop,
+#home .home-3d-stage,
+#home .home-character-theater,
+#home .home-featured-power,
+#home .home-power-fx{display:none!important}
+#home .home-card-v2,
+#home .home-card-v2 *,
+#home .home-card-v2::before,
+#home .home-card-v2::after{
+  transform:none!important;
+  transform-style:flat!important;
+  perspective:none!important;
+  animation:none!important;
+  filter:none;
+}
+
+#home .home-card-v2{
+  position:relative!important;
+  inset:auto!important;
+  z-index:3!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr)!important;
+  grid-template-areas:
+    "kicker actions"
+    "title actions"
+    "subtitle actions"
+    "live actions"
+    "roster roster"
+    "status status"
+    "footer footer"!important;
+  align-items:center!important;
+  gap:10px 34px!important;
+  width:min(1120px,100%)!important;
+  max-width:1120px!important;
+  min-width:0!important;
+  margin:0 auto!important;
+  padding:clamp(26px,3.6vw,48px)!important;
+  border-radius:32px!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 0 0,rgba(91,170,255,.12),transparent 30%),
+    linear-gradient(145deg,rgba(17,12,25,.96),rgba(7,5,11,.94))!important;
+  border:1px solid rgba(147,115,206,.32)!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.58),0 0 60px rgba(91,71,171,.15)!important;
+  backdrop-filter:blur(14px) saturate(1.08)!important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.08)!important;
+}
+#home .home-card-v2::before{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  border-radius:inherit!important;
+  pointer-events:none!important;
+  background:linear-gradient(120deg,rgba(99,200,255,.18),transparent 24%,transparent 70%,rgba(164,89,255,.16))!important;
+}
+#home .home-card-v2::after{
+  content:''!important;
+  position:absolute!important;
+  inset:12px!important;
+  border-radius:23px!important;
+  border:1px solid rgba(255,255,255,.035)!important;
+  pointer-events:none!important;
+}
+#home .home-kicker{grid-area:kicker;align-self:end;position:relative;z-index:1;margin:0!important;letter-spacing:.14em;color:#9cddff;font-size:.72rem}
+#home .home-title-wrap{grid-area:title;position:relative;z-index:1;display:block!important;min-height:0!important;margin:2px 0 0!important}
+#home .home-title-wrap h1{margin:0!important;max-width:100%!important;font-size:clamp(4.2rem,8vw,7.8rem)!important;line-height:.82!important;letter-spacing:-.075em!important;white-space:normal!important;text-align:left!important;filter:none!important;text-shadow:0 10px 38px rgba(0,0,0,.46)!important}
+#home .home-title-wrap h1 span{background:linear-gradient(180deg,#fff,#dcefff 52%,#71bdff)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+#home .home-kanji{position:absolute!important;left:auto!important;right:-8px!important;top:50%!important;transform:translateY(-50%)!important;font-size:clamp(6rem,11vw,10rem)!important;color:rgba(151,61,218,.10)!important;z-index:-1!important}
+#home .home-subtitle{grid-area:subtitle;position:relative;z-index:1;max-width:560px!important;margin:5px 0 10px!important;color:#d4cadc!important;font-size:clamp(.98rem,1.4vw,1.12rem)!important;line-height:1.65!important;text-align:left!important}
+#home .home-live-strip{grid-area:live;position:relative;z-index:1;display:flex!important;justify-content:flex-start!important;align-items:center!important;flex-wrap:wrap!important;gap:8px!important;margin:0!important}
+#home .home-live-strip span,#home .home-live-strip strong{max-width:100%!important;padding:8px 11px!important;border-radius:999px!important;background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.075)!important;color:#efe9f5!important;font-size:.76rem!important;white-space:normal!important}
+#home .home-live-strip strong{color:#9ddeff!important;border-color:rgba(91,190,255,.22)!important;background:rgba(91,190,255,.08)!important}
+#home .home-actions-grid{grid-area:actions;position:relative;z-index:1;display:grid!important;grid-template-columns:1fr!important;gap:11px!important;width:100%!important;min-width:0!important;margin:0!important}
+#home .home-action{
+  position:relative!important;
+  min-width:0!important;
+  width:100%!important;
+  min-height:82px!important;
+  padding:15px 17px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(255,255,255,.11)!important;
+  background:linear-gradient(140deg,rgba(28,20,39,.96),rgba(10,8,15,.97))!important;
+  box-shadow:0 12px 26px rgba(0,0,0,.22)!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+#home .home-action::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(115deg,transparent 24%,rgba(255,255,255,.07) 48%,transparent 72%);transform:translateX(-110%)!important;transition:transform .42s ease!important;pointer-events:none}
+#home .home-action:hover{transform:translateY(-2px)!important;border-color:rgba(101,200,255,.42)!important;box-shadow:0 16px 34px rgba(0,0,0,.32),0 0 24px rgba(89,180,255,.12)!important}
+#home .home-action:hover::after{transform:translateX(110%)!important}
+#home .home-action-play{grid-column:auto!important}
+#home .home-action-icon{flex:0 0 auto!important}
+#home .home-action b{font-size:1rem!important;letter-spacing:.02em}
+#home .home-action small{font-size:.78rem!important;line-height:1.35!important;color:#bdb2c7!important;overflow-wrap:anywhere!important}
+#home .home-footer-line{grid-area:footer;position:relative;z-index:1;margin:3px 0 0!important}
+#home .mc-home-credit{grid-area:footer;position:relative;z-index:2;margin-top:34px!important;text-align:center!important}
+
+.v33-home-roster{grid-area:roster;position:relative;z-index:1;margin-top:12px;padding:14px;border-radius:19px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+.v33-home-roster-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:11px}
+.v33-home-roster-head b{display:block;font-size:.9rem}.v33-home-roster-head small{display:block;margin-top:3px;color:#9e93a8;font-size:.74rem}.v33-home-roster-head span{padding:7px 10px;border-radius:999px;background:rgba(96,199,255,.08);border:1px solid rgba(96,199,255,.18);color:#9edfff;font-size:.68rem;font-weight:900}
+.v33-roster-strip{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px}
+.v33-roster-person{position:relative;aspect-ratio:1;border-radius:14px;border:1px solid rgba(255,255,255,.09);background:#0c0911;overflow:hidden;cursor:pointer;padding:0!important;box-shadow:0 8px 18px rgba(0,0,0,.18)}
+.v33-roster-person img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s ease,filter .2s ease}
+.v33-roster-person span{position:absolute;left:4px;right:4px;bottom:4px;padding:4px 3px;border-radius:7px;background:rgba(5,4,8,.82);color:#fff;font-size:.58rem;font-weight:900;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v33-roster-person:hover img{transform:scale(1.06)!important;filter:brightness(1.1)!important}
+.v33-home-status{grid-area:status;position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:2px}
+.v33-home-status-card{padding:11px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.075);background:rgba(255,255,255,.03);min-width:0}
+.v33-home-status-card small{display:block;color:#8f8598;text-transform:uppercase;letter-spacing:.09em;font-size:.58rem}
+.v33-home-status-card b{display:block;margin-top:4px;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ======================== STANZE ======================== */
+.rooms-screen,.character-info-screen,.room-draft-screen,.gm-screen-v3{position:relative;overflow-x:hidden!important}
+.rooms-screen::before,.character-info-screen::after,.room-draft-screen::after,.gm-screen-v3::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 15% 10%,rgba(74,153,255,.10),transparent 27%),radial-gradient(circle at 88% 14%,rgba(165,80,255,.09),transparent 25%);opacity:.9}
+.rooms-wrap,.character-info-wrap,.room-draft-wrap,.gm-wrap-v3{position:relative;z-index:1}
+.v33-rooms-hero{display:grid;grid-template-columns:1.25fr .85fr;gap:18px;margin-bottom:18px;padding:23px;border-radius:27px;border:1px solid rgba(103,155,226,.20);background:radial-gradient(circle at 0 0,rgba(70,141,255,.16),transparent 38%),linear-gradient(145deg,rgba(20,14,29,.97),rgba(8,6,12,.98));box-shadow:0 20px 46px rgba(0,0,0,.31)}
+.v33-rooms-kicker{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#83d5ff;font-weight:950}
+.v33-rooms-hero h3{margin:9px 0 8px;font-size:clamp(1.65rem,3vw,2.35rem)}
+.v33-rooms-hero p{margin:0;color:#c5b9cc;line-height:1.58}
+.v33-room-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.v33-room-chips span{padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);font-size:.78rem}
+.v33-room-state{align-self:center;padding:17px;border-radius:19px;border:1px solid rgba(255,255,255,.09);background:rgba(7,6,11,.52)}
+.v33-room-state small{display:block;color:#91869c;text-transform:uppercase;letter-spacing:.09em;font-size:.62rem}.v33-room-state b{display:block;margin:6px 0;font-size:1.08rem}.v33-room-state p{font-size:.82rem;color:#a99db2;line-height:1.45}
+.room-grid{gap:16px!important}
+.room-card,.room-lobby{border-radius:23px!important;border-color:rgba(255,255,255,.10)!important;background:linear-gradient(145deg,rgba(19,15,27,.97),rgba(9,7,13,.98))!important;box-shadow:0 18px 40px rgba(0,0,0,.25)!important}
+.room-card{position:relative;overflow:hidden}
+.room-card::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#55c4ff,#9b67ff,#ff5a81)}
+.room-input{min-height:51px!important;background:#0e0a14!important}
+.room-btn{min-height:48px!important}
+
+/* ======================== INFO / SCELTA ======================== */
+.info-intro,.character-info-stage,.room-draft-status,.room-draft-stage,.room-draft-roster-panel{box-shadow:0 20px 46px rgba(0,0,0,.28)!important}
+.character-info-stage,.room-draft-stage{border-color:rgba(255,255,255,.11)!important}
+.character-info-description,.room-draft-description{line-height:1.65!important}
+.info-stat-chip,.room-draft-chip{border-radius:14px!important;border:1px solid rgba(255,255,255,.09)!important;background:linear-gradient(145deg,rgba(255,255,255,.05),rgba(255,255,255,.02))!important}
+.info-character-card,.room-draft-card,.info-tech-card,.room-draft-tech{box-shadow:0 10px 24px rgba(0,0,0,.22)!important}
+
+/* Dropdown uniformi */
+.info-moves-dropdown,.game-moves-dropdown,.movement-dropdown,.v33-gm-feed-dropdown{border:1px solid rgba(255,255,255,.10)!important;border-radius:19px!important;background:linear-gradient(145deg,rgba(18,14,25,.96),rgba(9,7,13,.97))!important;box-shadow:0 15px 34px rgba(0,0,0,.24)!important;overflow:hidden}
+.info-moves-dropdown summary,.game-moves-dropdown summary,.movement-dropdown summary,.v33-gm-feed-dropdown summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;cursor:pointer}
+.info-moves-dropdown summary::-webkit-details-marker,.game-moves-dropdown summary::-webkit-details-marker,.movement-dropdown summary::-webkit-details-marker,.v33-gm-feed-dropdown summary::-webkit-details-marker{display:none}
+.dropdown-count,.v33-feed-count{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:7px 10px;border-radius:999px;background:rgba(84,191,255,.12);border:1px solid rgba(84,191,255,.22);color:#9edcff;font-weight:900}
+.dropdown-chevron{transition:transform .2s ease!important}.info-moves-dropdown[open] .dropdown-chevron,.game-moves-dropdown[open] .dropdown-chevron,.movement-dropdown[open] .dropdown-chevron,.v33-gm-feed-dropdown[open] .dropdown-chevron{transform:rotate(180deg)!important}
+
+/* ======================== GAME MASTER ======================== */
+.gm-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.v33-gm-feed-shell{margin:12px 0 15px;padding:0!important;overflow:hidden!important}
+.v33-gm-feed-top{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 17px 0}
+.v33-gm-feed-top h4{margin:0;font-size:1.03rem}.v33-gm-feed-top p{margin:4px 0 0;color:#9f93a7;font-size:.82rem}
+.v33-gm-feed-body{padding:0 16px 16px}
+.v33-gm-feed-toolbar{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px}
+.v33-gm-feed-toolbar label span{display:block;margin-bottom:6px;color:#b4a8bd;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em}
+.v33-gm-feed-toolbar select,.v33-gm-feed-toolbar input{width:100%;min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid #4a3856;background:#0c0911;color:#fff}
+.v33-gm-feed{display:grid;gap:9px;max-height:380px;overflow:auto;padding-right:4px}
+.v33-feed-item{position:relative;overflow:hidden;padding:13px 14px 13px 17px;border-radius:15px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(145deg,rgba(17,13,24,.95),rgba(9,7,13,.96))}
+.v33-feed-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#54bfff,#c96cff)}
+.v33-feed-player{display:inline-flex;margin-bottom:6px;padding:5px 9px;border-radius:999px;background:rgba(84,191,255,.10);color:#9edcff;font-size:.69rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.v33-feed-item strong{display:block;margin-bottom:5px}.v33-feed-item p{margin:0;color:#c9bfd1;line-height:1.42}.v33-feed-meta{margin-top:7px;color:#93889d;font-size:.72rem}
+
+/* ======================== MOBILE ======================== */
+@media(max-width:980px){
+  #home.home.active{padding:82px 16px 36px!important;overflow-y:auto!important}
+  #home .home-card-v2{grid-template-columns:1fr!important;grid-template-areas:"kicker" "title" "subtitle" "live" "actions" "roster" "status" "footer"!important;gap:10px!important;width:min(760px,100%)!important;padding:28px 23px!important}
+  #home .home-title-wrap h1{text-align:center!important;font-size:clamp(4rem,13vw,6.4rem)!important}
+  #home .home-kicker,#home .home-subtitle{text-align:center!important;margin-left:auto!important;margin-right:auto!important}
+  #home .home-live-strip{justify-content:center!important}
+  #home .home-actions-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #home .home-action-play{grid-column:1/-1!important}
+  .v33-rooms-hero{grid-template-columns:1fr}
+  .v33-gm-feed-toolbar{grid-template-columns:1fr 1fr}.v33-gm-feed-toolbar button{grid-column:1/-1}
+}
+@media(max-width:690px){
+  #home.home.active{padding:76px 11px 96px!important}
+  #home .home-card-v2{width:100%!important;padding:22px 14px!important;border-radius:24px!important}
+  #home .home-title-wrap h1{font-size:clamp(3.1rem,17vw,5rem)!important}
+  #home .home-actions-grid{grid-template-columns:1fr!important}
+  #home .home-action-play{grid-column:auto!important}
+  #home .home-action{min-height:74px!important}
+  .v33-roster-strip{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+  .v33-home-status{grid-template-columns:1fr}
+  .v33-home-roster-head{align-items:flex-start}.v33-home-roster-head span{display:none}
+  .v33-rooms-hero{padding:18px}
+  .gm-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .v33-gm-feed-top{flex-direction:column;align-items:flex-start}
+  .v33-gm-feed-toolbar{grid-template-columns:1fr}.v33-gm-feed-toolbar button{grid-column:auto}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.screen.active,#home .home-action,#home .home-action::after{animation:none!important;transition:none!important}}
+
+/* Evita che l'HUD progressione copra i pulsanti della Home su telefono. */
+@media(max-width:690px){
+  body.v33-home-active.mobile-layout #v20AccountHud{display:none!important}
+  body.v33-home-active .v33-roster-strip{display:grid;grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:76px;overflow-x:auto;overscroll-behavior-inline:contain;padding-bottom:5px;scrollbar-width:thin}
+}
+
+/* Safari/iPhone: impedisce alle vecchie larghezze min-content di allargare la griglia. */
+#home .home-card-v2{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)!important}
+#home .home-kicker,#home .home-title-wrap,#home .home-subtitle,#home .home-live-strip,#home .home-actions-grid,#home .v33-home-roster,#home .v33-home-status,#home .home-footer-line,#home .mc-home-credit{min-width:0!important;max-width:100%!important}
+@media(max-width:980px){#home .home-card-v2{grid-template-columns:minmax(0,1fr)!important}}

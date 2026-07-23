@@ -1,0 +1,28 @@
+REPORT VERIFICA JJK ENERGY V33
+
+BASE
+- V27 originale: JJK_Energy_V27_Rework_Personaggi_Trofei.zip
+- Nessun file proveniente da V32/V32.1/V32.2 usato come base.
+
+DIFFERENZE RISPETTO ALLA V27
+- index.html: aggiunti solo i riferimenti a rebuild-v33.css e rebuild-v33.js e aggiornato il titolo.
+- rebuild-v33.css: nuovo file di interfaccia.
+- rebuild-v33.js: nuovo file di interfaccia.
+- events-v26.js: corretta una chiamata insertBefore non sicura.
+- events-v26-fix.js: applicata la stessa correzione difensiva.
+- Tutti gli altri file risultano identici alla V27 originale.
+
+TEST AUTOMATICI ESEGUITI
+- Desktop 1440 px: nessun overflow orizzontale.
+- Mobile 390 px: nessun overflow orizzontale.
+- Nessuna risorsa grafica locale mancante.
+- Nessun errore JavaScript nel test locale controllato.
+- Navigazione Home, Info Personaggi e Stanze verificata.
+- Apertura delle schede di Gojo, Megumi, Geto, Sukuna, Mahito, Jogo, Toji, Itadori e Yuta verificata.
+- Vita, Energia, EXP e Bonus Combattimento modificabili.
+- Game Master simulato con due giocatori.
+- Schede giocatori, filtro movimenti e ricerca nel feed verificati.
+- Pannelli Boss Rush e Doppi EXP caricati.
+
+LIMITAZIONE DEL TEST
+Una partita reale tra dispositivi e la sincronizzazione Supabase richiedono il server, account reali e connessione Internet. Le funzioni e i file cloud originali sono rimasti invariati, ma non possono essere certificati end-to-end offline.

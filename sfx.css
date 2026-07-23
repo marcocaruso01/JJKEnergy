@@ -1,0 +1,9 @@
+/* JJK Energy - effetti sonori e controllo volume */
+.jjk-audio-toggle{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:4200;display:grid;grid-template-columns:34px auto;gap:8px;align-items:center;padding:8px 11px 8px 8px;border-radius:999px;border:1px solid rgba(105,188,255,.34);background:rgba(8,7,14,.9);color:#eaf6ff;box-shadow:0 12px 32px rgba(0,0,0,.36),0 0 18px rgba(78,174,235,.12);backdrop-filter:blur(14px);cursor:pointer;transition:.18s ease}
+.jjk-audio-toggle:hover{transform:translateY(-2px);border-color:#67c5ff;box-shadow:0 14px 34px rgba(0,0,0,.4),0 0 22px rgba(78,174,235,.22)}
+.jjk-audio-toggle-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#10263b;border:1px solid #3478a4;font-size:1rem}
+.jjk-audio-toggle-copy{display:grid;text-align:left;line-height:1.05}.jjk-audio-toggle-copy b{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em}.jjk-audio-toggle-copy small{margin-top:3px;color:#8fabc0;font-size:.6rem}
+.jjk-audio-toggle.muted{border-color:rgba(150,112,123,.3);color:#c3b7bd}.jjk-audio-toggle.muted .jjk-audio-toggle-icon{background:#27151c;border-color:#6e3448}.jjk-audio-toggle.muted .jjk-audio-toggle-copy small{color:#9f818b}
+.jjk-sfx-pulse{animation:jjkSfxPulse .18s ease-out}@keyframes jjkSfxPulse{50%{transform:scale(.96)}}
+@media(max-width:700px){.jjk-audio-toggle{bottom:max(74px,calc(env(safe-area-inset-bottom) + 64px));right:10px;padding-right:8px}.jjk-audio-toggle-copy{display:none}}
+@media(prefers-reduced-motion:reduce){.jjk-audio-toggle{transition:none}.jjk-sfx-pulse{animation:none}}

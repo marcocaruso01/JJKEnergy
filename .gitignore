@@ -1,0 +1,14 @@
+.DS_Store
+._*
+__MACOSX/
+
+*.zip
+*.log
+
+.env
+.env.*
+!.env.example
+
+.idea/
+.vscode/
+

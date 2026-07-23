@@ -1,0 +1,148 @@
+/* JJK Energy V2.2 - Layout adattivo PC / Mobile
+   Attivato con body.mobile-layout. Non modifica dati o contenuti. */
+:root{--mobile-safe-bottom:max(14px,env(safe-area-inset-bottom));--mobile-safe-top:max(10px,env(safe-area-inset-top))}
+
+.layout-mode-toggle{position:fixed;z-index:9500;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));display:flex;align-items:center;gap:8px;min-height:42px;padding:9px 13px;border-radius:14px;border:1px solid rgba(112,193,255,.32);background:linear-gradient(145deg,rgba(12,15,28,.94),rgba(20,9,31,.92));color:#fff;font:800 .76rem/1 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.02em;box-shadow:0 12px 30px rgba(0,0,0,.35),0 0 24px rgba(95,133,255,.13);backdrop-filter:blur(14px);cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.layout-mode-toggle:hover{transform:translateY(-2px);border-color:rgba(133,216,255,.7)}
+.layout-mode-toggle .layout-mode-icon{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:rgba(100,170,255,.16);font-size:.95rem}
+.layout-mode-toggle .layout-mode-copy{display:grid;text-align:left;gap:2px}.layout-mode-toggle .layout-mode-copy b{font-size:.76rem}.layout-mode-toggle .layout-mode-copy small{color:#9fb2ca;font-size:.58rem;font-weight:650}
+body.mobile-layout .layout-mode-toggle{top:auto;bottom:calc(var(--mobile-safe-bottom) + 6px);right:10px;border-color:rgba(160,99,255,.45);background:linear-gradient(145deg,rgba(23,10,35,.96),rgba(8,13,28,.95))}
+
+/* Accesso account: evita sovrapposizioni in qualunque zoom e viewport. */
+.v21-auth-gate{box-sizing:border-box;overscroll-behavior:contain}
+.v21-auth-shell{max-height:calc(100dvh - 36px);min-height:0}
+.v21-auth-art,.v21-auth-panel{min-width:0;min-height:0;box-sizing:border-box}
+.v21-auth-panel{overflow-y:auto;overscroll-behavior:contain}
+.v21-auth-title,.v21-auth-sub,.v21-auth-hint,.v21-auth-pending,.v21-auth-art-copy h2,.v21-auth-art-copy p{overflow-wrap:anywhere}
+.v21-auth-tabs{flex:0 0 auto}.v21-auth-view.active,.v21-auth-profile-only.show{min-width:0}
+.v21-auth-field input{box-sizing:border-box;min-width:0}
+.v21-auth-error.show,.v21-auth-success.show{margin-bottom:12px}
+@media(max-height:760px) and (min-width:821px){
+  .v21-auth-shell{width:min(1040px,100%);grid-template-columns:minmax(230px,.65fr) minmax(360px,1.35fr)}
+  .v21-auth-art{min-height:0;padding:24px}.v21-auth-art-copy h2{font-size:clamp(1.9rem,3.5vw,3rem)}.v21-auth-benefits{grid-template-columns:1fr}.v21-auth-benefit{padding:7px 9px}.v21-auth-panel{padding:24px 30px}.v21-auth-title{font-size:1.65rem}.v21-auth-sub{margin-bottom:14px}.v21-auth-tabs{margin-bottom:12px}
+}
+@media(max-width:920px){
+  .v21-auth-shell{grid-template-columns:1fr;max-height:none;width:min(620px,100%);overflow:visible}
+  .v21-auth-art{min-height:190px;padding:22px}.v21-auth-art-copy h2{font-size:clamp(1.75rem,7vw,2.55rem)}.v21-auth-art-copy p{font-size:.8rem}.v21-auth-benefits{display:none}.v21-auth-panel{overflow:visible;padding:24px 22px 30px}.v21-auth-gate{align-items:flex-start}
+}
+@media(max-width:520px){
+  .v21-auth-gate{padding:8px 8px calc(76px + env(safe-area-inset-bottom))}
+  .v21-auth-shell{border-radius:20px}.v21-auth-art{min-height:132px;padding:16px;background-position:center 30%}.v21-auth-art-copy span,.v21-auth-art-copy p{display:none}.v21-auth-art-copy h2{margin:0;font-size:1.62rem;line-height:1}.v21-auth-panel{padding:19px 14px 24px}.v21-auth-title{font-size:1.35rem;line-height:1.08}.v21-auth-sub{font-size:.76rem;margin-bottom:13px}.v21-auth-tabs{position:static;margin-bottom:13px}.v21-auth-tab{padding:10px 7px;font-size:.78rem}.v21-auth-field input{padding:13px;font-size:16px}.v21-auth-btn{min-height:48px}.v21-auth-hint{font-size:.68rem}.v21-auth-pending{font-size:.72rem;padding:11px}.v21-account-chip{bottom:calc(74px + env(safe-area-inset-bottom))}
+}
+
+/* Modalità mobile forzata anche su tablet o desktop stretto. */
+body.mobile-layout{overflow-x:hidden;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+body.mobile-layout .screen.page,body.mobile-layout .screen.player{min-height:100dvh;overflow:visible}
+body.mobile-layout .wrap{width:100%;max-width:none;padding-left:12px!important;padding-right:12px!important;box-sizing:border-box}
+body.mobile-layout .topbar{position:sticky;top:0;z-index:90;min-height:54px;padding:8px 4px;background:linear-gradient(180deg,rgba(7,5,12,.98),rgba(7,5,12,.9));backdrop-filter:blur(16px)}
+body.mobile-layout .topbar .title{font-size:1rem;text-align:center;white-space:normal}
+body.mobile-layout .back{min-width:42px;min-height:42px}
+body.mobile-layout button,body.mobile-layout select,body.mobile-layout input{touch-action:manipulation}
+body.mobile-layout button{min-height:42px}
+
+/* Home */
+body.mobile-layout #home{min-height:100dvh;padding:10px 10px calc(88px + env(safe-area-inset-bottom));overflow-y:auto!important;overflow-x:hidden}
+body.mobile-layout #home .home-content,body.mobile-layout #home .home-shell,body.mobile-layout #home .home-main{width:100%;max-width:none}
+body.mobile-layout #home .home-card-grid,body.mobile-layout #home .home-actions,body.mobile-layout #home .menu-grid{grid-template-columns:1fr!important;gap:10px!important}
+body.mobile-layout #home .home-card,body.mobile-layout #home .menu-card{min-height:74px!important}
+body.mobile-layout #home .cinematic-home-stage,body.mobile-layout #home .home-cinematic,body.mobile-layout #home .home-3d-stage{min-height:330px!important;height:auto!important;max-height:52dvh}
+body.mobile-layout #home .carousel-3d,body.mobile-layout #home .home-character-carousel{touch-action:pan-x;overflow:visible}
+
+/* Statistiche */
+body.mobile-layout #statistics .cloud-stats-nav{position:sticky;top:56px;z-index:80;display:flex;overflow-x:auto;flex-wrap:nowrap;gap:7px;padding:8px 2px;background:rgba(8,5,13,.92);scrollbar-width:none}
+body.mobile-layout #statistics .cloud-stats-nav::-webkit-scrollbar{display:none}
+body.mobile-layout #statistics .cloud-stats-nav button{flex:0 0 auto;white-space:nowrap}
+body.mobile-layout #statistics .cloud-summary-grid,body.mobile-layout #statistics .cloud-stat-grid,body.mobile-layout #statistics .cloud-chart-grid,body.mobile-layout #statistics .world-pulse-grid,body.mobile-layout #statistics .v20-progression-grid{grid-template-columns:1fr!important}
+body.mobile-layout #statistics canvas,body.mobile-layout #statistics svg{max-width:100%;height:auto}
+body.mobile-layout #statistics .cloud-stats-section{scroll-margin-top:120px}
+
+/* Stanze */
+body.mobile-layout #rooms .rooms-grid,body.mobile-layout #rooms .room-forms,body.mobile-layout #rooms .room-layout{grid-template-columns:1fr!important}
+body.mobile-layout #rooms input,body.mobile-layout #rooms select{width:100%;box-sizing:border-box;font-size:16px}
+body.mobile-layout #rooms .room-code{font-size:clamp(1.5rem,10vw,2.6rem);letter-spacing:.08em}
+
+/* Game Master: una colonna, comandi leggibili. */
+body.mobile-layout #gameMaster .gm-v3-layout,body.mobile-layout #gameMaster .gm-layout,body.mobile-layout #gameMaster .gm-grid,body.mobile-layout #gameMaster .gm-enhanced-grid{grid-template-columns:1fr!important}
+body.mobile-layout #gameMaster .gm-v3-nav,body.mobile-layout #gameMaster .gm-tabs{display:flex;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;position:sticky;top:56px;z-index:75;background:rgba(7,5,12,.94);padding:7px 0}
+body.mobile-layout #gameMaster .gm-v3-nav button,body.mobile-layout #gameMaster .gm-tabs button{flex:0 0 auto;white-space:nowrap}
+body.mobile-layout #gameMaster .gm-player-grid{display:grid!important;grid-template-columns:1fr!important;gap:12px}
+body.mobile-layout #gameMaster .gm-player-card,body.mobile-layout #gameMaster .gm-enhanced-card{padding:13px;border-radius:18px}
+body.mobile-layout #gameMaster .gm-actions,body.mobile-layout #gameMaster .gm-actions-row,body.mobile-layout #gameMaster .gm-toggles{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px}
+body.mobile-layout #gameMaster .gm-resource-row,body.mobile-layout #gameMaster .gm-control-row{grid-template-columns:1fr!important}
+body.mobile-layout #gameMaster input,body.mobile-layout #gameMaster select{width:100%;min-height:46px;box-sizing:border-box;font-size:16px}
+
+/* Info personaggi */
+body.mobile-layout #selection .info-intro{display:block;margin:8px 0 14px}body.mobile-layout #selection .info-intro p{text-align:left;margin-top:8px}
+body.mobile-layout #selection .character-info-stage{display:flex;flex-direction:column;min-height:0;border-radius:20px}
+body.mobile-layout #selection .character-info-portrait{min-height:330px;padding:12px}
+body.mobile-layout #selection .character-info-image-wrap{width:min(100%,360px);height:330px;transform:none;border-radius:18px}
+body.mobile-layout #selection .character-info-image-wrap img{object-fit:contain;object-position:center center;background:#050308}
+body.mobile-layout #selection .character-info-copy{padding:19px 16px 22px}
+body.mobile-layout #selection .character-info-copy h1{font-size:clamp(2rem,13vw,3.5rem)}
+body.mobile-layout #selection .character-info-progression{grid-template-columns:repeat(3,1fr)}
+body.mobile-layout #selection .character-info-actions{grid-template-columns:48px 1fr 48px}
+body.mobile-layout #selection .character-info-rail{scroll-snap-type:x mandatory;padding-bottom:10px}
+body.mobile-layout #selection .info-character-card{flex-basis:145px;height:190px;scroll-snap-align:center}
+body.mobile-layout #selection .info-character-card img{height:128px;object-fit:contain;background:#07050b}
+body.mobile-layout #selection .character-info-techniques{grid-template-columns:1fr!important}
+body.mobile-layout #selection .info-tech-card{grid-template-columns:48px minmax(0,1fr);align-items:start}
+body.mobile-layout #selection .info-tech-cost{grid-column:2;text-align:left}
+
+/* Scelta personaggio stanza */
+body.mobile-layout #roomCharacterSelect .room-draft-status{grid-template-columns:1fr 1fr;gap:8px}
+body.mobile-layout #roomCharacterSelect .room-draft-status>div:first-child{grid-column:1/-1}
+body.mobile-layout #roomCharacterSelect .room-draft-layout{display:flex!important;flex-direction:column;gap:12px}
+body.mobile-layout #roomCharacterSelect .room-draft-roster-panel{order:2;max-height:none}
+body.mobile-layout #roomCharacterSelect .room-draft-stage{order:1;display:flex!important;flex-direction:column;min-height:0;border-radius:20px}
+body.mobile-layout #roomCharacterSelect .room-draft-portrait{min-height:320px;height:320px}
+body.mobile-layout #roomCharacterSelect .room-draft-portrait img{width:100%;height:100%;object-fit:contain;object-position:center;background:#050308}
+body.mobile-layout #roomCharacterSelect .room-draft-copy{padding:18px 15px 20px}
+body.mobile-layout #roomCharacterSelect .room-draft-copy h1{font-size:clamp(2rem,13vw,3.4rem)}
+body.mobile-layout #roomCharacterSelect .room-draft-rail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:9px}
+body.mobile-layout #roomCharacterSelect .room-draft-card{flex:0 0 132px;scroll-snap-align:center}
+body.mobile-layout #roomCharacterSelect .room-draft-card img{object-fit:contain;background:#07050b}
+
+/* Scheda giocatore: ordine verticale e tecniche pienamente utilizzabili. */
+body.mobile-layout #player .dashboard{display:flex!important;flex-direction:column;gap:12px;overflow:visible!important;min-height:0!important}
+body.mobile-layout #player .main{order:1;min-width:0;overflow:visible!important}
+body.mobile-layout #player .side{order:2;position:static!important;max-height:none!important;overflow:visible!important}
+body.mobile-layout #player .log-panel{order:3;position:static!important;max-height:none!important;overflow:visible!important}
+body.mobile-layout #player .hero{display:flex!important;flex-direction:column;align-items:stretch;gap:13px;padding:12px}
+body.mobile-layout #player .hero>img{width:100%;height:min(50dvh,420px);object-fit:contain;object-position:center;background:#06040a;border-radius:16px}
+body.mobile-layout #player .life-widget{position:static!important;width:100%;box-sizing:border-box}
+body.mobile-layout #player .stats{grid-template-columns:1fr!important}
+body.mobile-layout #player .grade-row{display:flex;overflow-x:auto;gap:7px;padding-bottom:6px}
+body.mobile-layout #player .grade-row button{flex:0 0 auto}
+body.mobile-layout #player .tech-grid{grid-template-columns:1fr!important;gap:12px}
+body.mobile-layout #player .tech-card{min-height:0!important;display:grid!important;grid-template-columns:86px minmax(0,1fr)!important;align-items:stretch}
+body.mobile-layout #player .tech-card>img{width:86px!important;height:100%!important;min-height:126px;object-fit:cover!important;object-position:center!important}
+body.mobile-layout #player .tech-content{padding:12px!important;min-width:0}
+body.mobile-layout #player .tech-name{font-size:1rem;overflow-wrap:anywhere}
+body.mobile-layout #player .tech-cost{font-size:.76rem;line-height:1.35}
+body.mobile-layout #player .use-btn{width:100%;min-height:48px;margin-top:10px}
+body.mobile-layout #player .energy-actions,body.mobile-layout #player .exp-actions,body.mobile-layout #player .combat-bonus-actions,body.mobile-layout #player .jogo-actions,body.mobile-layout #player .toji-actions{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:8px}
+body.mobile-layout #player .energy-actions .full,body.mobile-layout #player .toji-full{grid-column:1/-1}
+body.mobile-layout #player .pass-turn-btn{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));z-index:100;width:100%;box-shadow:0 12px 34px rgba(0,0,0,.45)}
+body.mobile-layout #player details>summary{min-height:52px}
+
+/* Aggiornamenti e schermate generiche */
+body.mobile-layout #updates .updates-grid,body.mobile-layout .page .cards-grid{grid-template-columns:1fr!important}
+body.mobile-layout .modal,body.mobile-layout .modal-card{max-width:calc(100vw - 20px);max-height:calc(100dvh - 24px);overflow-y:auto}
+
+/* Il gate account usa sempre la variante mobile quando il toggle e attivo. */
+body.mobile-layout .v21-auth-gate{align-items:flex-start;padding:8px 8px calc(78px + env(safe-area-inset-bottom))}
+body.mobile-layout .v21-auth-shell{grid-template-columns:1fr;max-height:none;width:min(620px,100%);border-radius:20px;overflow:visible}
+body.mobile-layout .v21-auth-art{min-height:132px;padding:16px;background-position:center 30%}
+body.mobile-layout .v21-auth-brand,body.mobile-layout .v21-auth-benefits,body.mobile-layout .v21-auth-art-copy span,body.mobile-layout .v21-auth-art-copy p{display:none}
+body.mobile-layout .v21-auth-art-copy h2{margin:0;font-size:1.65rem;line-height:1}
+body.mobile-layout .v21-auth-panel{padding:19px 14px 24px;overflow:visible}
+body.mobile-layout .v21-auth-title{font-size:1.38rem;line-height:1.08}
+body.mobile-layout .v21-auth-sub{font-size:.76rem;margin-bottom:13px}
+body.mobile-layout .v21-auth-tabs{position:static;margin-bottom:13px}
+body.mobile-layout .v21-auth-field input{font-size:16px}
+
+@media(max-width:700px){
+  body:not(.desktop-layout){padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  .layout-mode-toggle{top:auto;bottom:calc(var(--mobile-safe-bottom) + 6px);right:10px}
+}
+@media(prefers-reduced-motion:reduce){.layout-mode-toggle{transition:none}}

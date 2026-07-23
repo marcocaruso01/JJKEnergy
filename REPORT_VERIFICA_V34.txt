@@ -1,0 +1,45 @@
+REPORT VERIFICA — JJK ENERGY V34 ASCENSION COMPLETE
+===================================================
+
+CONTROLLI STATICI
+-----------------
+- Sintassi verificata su tutti i file JavaScript: OK.
+- Parsing del nuovo CSS con tinycss2: 0 errori.
+- ID HTML duplicati: 0.
+- Riferimenti locali mancanti: 0.
+- Tutti i file originali della V33, eccetto index.html, risultano byte-per-byte invariati.
+- I blocchi dati di personaggi, tecniche, costi e progressioni risultano invariati.
+
+CONTROLLI RUNTIME IN BROWSER HEADLESS
+-------------------------------------
+Test eseguiti con Chromium tramite documento inline controllato, per desktop 1440x1000
+e mobile 390x844.
+
+Desktop:
+- Home caricata: OK.
+- Overflow orizzontale: assente.
+- 5 azioni Home presenti.
+- 9 personaggi nel roster rapido.
+- Profilo Stregone presente con 6 trofei.
+- Scheda personaggio aperta e pulsanti anteprima tecniche inseriti.
+- Game Master simulato con 2 giocatori: 2 schede, 4 tab e spotlight attivo.
+- Overflow Game Master: assente.
+
+Mobile:
+- Home caricata: OK.
+- Overflow orizzontale: assente.
+- Profilo e trofei presenti.
+- Tecniche e anteprime presenti.
+- Game Master simulato con 2 giocatori: layout a colonna e nessun overflow.
+- Vecchi livelli 3D della Home disattivati esplicitamente.
+- Pulsante layout e pannello impostazioni separati per evitare sovrapposizioni.
+
+LIMITI DEL TEST
+---------------
+Nel test browser inline la libreria Supabase minificata segnala un errore di publicPath,
+perche viene incorporata artificialmente nel documento. Questo errore non riguarda la V34
+e non si verifica quando il file supabase.js viene caricato normalmente dalla cartella.
+
+Non e possibile certificare offline una partita reale fra telefoni differenti: per quel
+test servono account, connessione internet e il progetto Supabase operativo. Le funzioni
+multiplayer e database originali non sono state modificate.

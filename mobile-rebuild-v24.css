@@ -1,0 +1,271 @@
+/* JJK Energy V24 - ricostruzione mobile completa e Game Master fluido
+   Solo layout e usabilita: nessuna regola o dato di gioco viene alterato. */
+:root{
+  --v24-safe-top:max(10px,env(safe-area-inset-top));
+  --v24-safe-bottom:max(12px,env(safe-area-inset-bottom));
+  --v24-panel:#0d0a14;
+  --v24-line:rgba(132,177,224,.22);
+  --v24-blue:#62c7ff;
+}
+
+.mobile-v24-player-control,.mobile-v24-gm-resource-drawer{display:none}
+
+/* Correzioni generali per schermi stretti. */
+@media (max-width:900px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden!important}
+  body.v24-mobile-ui{font-size:15px;-webkit-text-size-adjust:100%}
+  body.v24-mobile-ui .screen.active{width:100%;min-height:100dvh}
+  body.v24-mobile-ui .page{padding:var(--v24-safe-top) 10px calc(var(--v24-safe-bottom) + 24px)!important}
+  body.v24-mobile-ui .wrap{width:100%!important;max-width:none!important;margin:0!important}
+  body.v24-mobile-ui button,body.v24-mobile-ui input,body.v24-mobile-ui select{font-size:16px}
+  body.v24-mobile-ui button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  body.v24-mobile-ui .topbar{
+    position:sticky!important;top:0!important;z-index:600!important;
+    display:grid!important;grid-template-columns:44px minmax(0,1fr) auto!important;
+    min-height:54px!important;gap:7px!important;align-items:center!important;
+    margin:0 0 10px!important;padding:6px!important;border-radius:0 0 16px 16px!important;
+    background:linear-gradient(180deg,rgba(6,7,14,.99),rgba(11,7,17,.96))!important;
+    border:1px solid rgba(119,170,224,.16)!important;border-top:0!important;
+    box-shadow:0 12px 28px rgba(0,0,0,.34)!important;backdrop-filter:blur(16px)!important;
+  }
+  body.v24-mobile-ui .topbar .back,body.v24-mobile-ui .topbar>button{
+    width:42px!important;min-width:42px!important;height:42px!important;padding:0!important;border-radius:12px!important;
+  }
+  body.v24-mobile-ui .topbar .title{min-width:0!important;margin:0!important;font-size:.88rem!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  body.v24-mobile-ui .topbar>button:last-child:not(.back){max-width:112px!important;padding:0 8px!important;font-size:.62rem!important;line-height:1.1!important;white-space:normal!important}
+
+  /* Le utility flottanti sono nascoste mentre si gioca o si usa il GM: nessuna sovrapposizione. */
+  body.v24-mobile-player .layout-mode-toggle,
+  body.v24-mobile-player .jjk-audio-toggle,
+  body.v24-mobile-player .v20-control-stack,
+  body.v24-mobile-player .v20-account-hud,
+  body.v24-mobile-player .v21-account-chip,
+  body.v24-mobile-player .mc-player-settings,
+  body.v24-mobile-gm .layout-mode-toggle,
+  body.v24-mobile-gm .jjk-audio-toggle,
+  body.v24-mobile-gm .v20-control-stack,
+  body.v24-mobile-gm .v20-account-hud,
+  body.v24-mobile-gm .v21-account-chip,
+  body.v24-mobile-gm .mc-player-settings{display:none!important}
+
+  /* Login/account: una sola colonna, nessun testo sovrapposto. */
+  body.v24-mobile-ui .v21-auth-gate{align-items:flex-start!important;padding:var(--v24-safe-top) 10px var(--v24-safe-bottom)!important;overflow-y:auto!important}
+  body.v24-mobile-ui .v21-auth-shell{display:block!important;width:100%!important;max-width:560px!important;min-height:0!important;margin:auto!important}
+  body.v24-mobile-ui .v21-auth-visual{display:none!important}
+  body.v24-mobile-ui .v21-auth-panel{width:100%!important;min-width:0!important;padding:20px 16px!important;border-radius:22px!important}
+  body.v24-mobile-ui .v21-auth-form{display:grid!important;gap:12px!important}
+  body.v24-mobile-ui .v21-auth-tabs{grid-template-columns:1fr 1fr!important}
+  body.v24-mobile-ui .v21-auth-panel input{width:100%!important;min-height:52px!important}
+  body.v24-mobile-ui .v21-auth-panel button{min-height:52px!important;white-space:normal!important}
+
+  /* Info e scelta personaggio online. */
+  body.v24-mobile-ui .character-info-stage,body.v24-mobile-ui .room-draft-stage{display:block!important;min-height:0!important;border-radius:22px!important;overflow:visible!important}
+  body.v24-mobile-ui .character-info-portrait,body.v24-mobile-ui .room-draft-portrait{min-height:0!important;padding:12px!important}
+  body.v24-mobile-ui .character-info-image-wrap{width:100%!important;height:auto!important;aspect-ratio:4/5!important;transform:none!important}
+  body.v24-mobile-ui .character-info-image-wrap img,body.v24-mobile-ui .room-draft-portrait img{width:100%!important;height:100%!important;max-height:520px!important;object-fit:contain!important;object-position:center top!important;background:#06050a!important}
+  body.v24-mobile-ui .room-draft-portrait img{aspect-ratio:4/5!important;height:auto!important}
+  body.v24-mobile-ui .character-info-copy,body.v24-mobile-ui .room-draft-copy{padding:18px 14px!important}
+  body.v24-mobile-ui .character-info-copy h1,body.v24-mobile-ui .room-draft-copy h1{font-size:clamp(2rem,12vw,3.1rem)!important;overflow-wrap:anywhere!important}
+  body.v24-mobile-ui .character-info-actions{grid-template-columns:44px minmax(0,1fr) 44px!important}
+  body.v24-mobile-ui .room-draft-layout{display:flex!important;flex-direction:column!important;gap:12px!important}
+  body.v24-mobile-ui .room-draft-roster-panel{order:2!important}
+  body.v24-mobile-ui .room-draft-status{grid-template-columns:1fr!important}
+  body.v24-mobile-ui .room-draft-techniques{grid-template-columns:1fr 1fr!important}
+  body.v24-mobile-ui .room-draft-confirm{width:100%!important;min-height:54px!important}
+  body.v24-mobile-ui .room-draft-rail,body.v24-mobile-ui .character-info-rail{overflow-x:auto!important;scroll-snap-type:x mandatory!important;padding-bottom:10px!important}
+}
+
+/* ===== SCHEDA GIOCATORE MOBILE: TUTTO IN FLUSSO, ZERO ELEMENTI FISSI ===== */
+@media (max-width:900px){
+  body.v24-mobile-player{padding-bottom:var(--v24-safe-bottom)!important}
+  body.v24-mobile-player #player,body.v24-mobile-player #player>.wrap,
+  body.v24-mobile-player #player .dashboard,body.v24-mobile-player #player .main,
+  body.v24-mobile-player #player .tech-area,body.v24-mobile-player #player .game-moves-dropdown,
+  body.v24-mobile-player #player .game-moves-body{
+    width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;
+  }
+  body.v24-mobile-player #player>.wrap{display:block!important}
+  body.v24-mobile-player #player .dashboard{display:block!important}
+
+  body.v24-mobile-player .mobile-v24-player-control{
+    position:sticky;top:calc(54px + env(safe-area-inset-top));z-index:520;display:block;margin:0 0 12px;padding:7px;
+    border-radius:16px;border:1px solid rgba(101,179,241,.26);
+    background:linear-gradient(145deg,rgba(6,10,20,.98),rgba(18,8,27,.98));
+    box-shadow:0 12px 30px rgba(0,0,0,.38);backdrop-filter:blur(16px);
+  }
+  body.v24-mobile-player .mobile-v24-turn-row{display:none;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-bottom:7px}
+  body.v24-mobile-player .mobile-v24-turn-row.show{display:grid}
+  body.v24-mobile-player .mobile-v24-turn-copy{min-width:0;padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+  body.v24-mobile-player .mobile-v24-turn-copy b{display:block;font-size:.72rem;color:#fff}
+  body.v24-mobile-player .mobile-v24-turn-copy small{display:block;margin-top:3px;color:#9fb0c5;font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.v24-mobile-player .mobile-v24-pass{min-width:132px;min-height:48px;padding:9px 12px;border-radius:12px;border:1px solid #d36b37;background:linear-gradient(135deg,#cf672d,#571d0b);color:#fff;font-size:.75rem;font-weight:950}
+  body.v24-mobile-player .mobile-v24-pass:disabled{opacity:.5;filter:grayscale(.4)}
+  body.v24-mobile-player .mobile-v24-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  body.v24-mobile-player .mobile-v24-tabs button{position:relative;min-width:0;min-height:52px;padding:6px 3px;border-radius:11px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.035);color:#aebbd0;display:grid;place-items:center;align-content:center;gap:3px;font-size:.61rem;font-weight:900}
+  body.v24-mobile-player .mobile-v24-tabs button .ico{font-size:1rem;line-height:1}
+  body.v24-mobile-player .mobile-v24-tabs button.active{color:#fff;border-color:var(--accent,#54bfff);background:linear-gradient(145deg,color-mix(in srgb,var(--accent,#54bfff) 28%,#111523),#0d0915);box-shadow:0 0 16px color-mix(in srgb,var(--accent,#54bfff) 25%,transparent)}
+  body.v24-mobile-player .mobile-v24-count{position:absolute;top:4px;right:5px;display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:999px;background:#257fc4;color:#fff;font-size:.54rem}
+
+  /* Una sola sezione alla volta. */
+  body.v24-mobile-player #player[data-v24-panel="sheet"] .side,
+  body.v24-mobile-player #player[data-v24-panel="sheet"] .log-panel,
+  body.v24-mobile-player #player[data-v24-panel="sheet"] .tech-area{display:none!important}
+
+  body.v24-mobile-player #player[data-v24-panel="techniques"] .side,
+  body.v24-mobile-player #player[data-v24-panel="techniques"] .log-panel,
+  body.v24-mobile-player #player[data-v24-panel="techniques"] .hero,
+  body.v24-mobile-player #player[data-v24-panel="techniques"] .v24-grade-block{display:none!important}
+  body.v24-mobile-player #player[data-v24-panel="techniques"] .main,
+  body.v24-mobile-player #player[data-v24-panel="techniques"] .tech-area{display:block!important}
+
+  body.v24-mobile-player #player[data-v24-panel="resources"] .main,
+  body.v24-mobile-player #player[data-v24-panel="resources"] .log-panel{display:none!important}
+  body.v24-mobile-player #player[data-v24-panel="resources"] .side{display:block!important}
+
+  body.v24-mobile-player #player[data-v24-panel="log"] .main,
+  body.v24-mobile-player #player[data-v24-panel="log"] .side{display:none!important}
+  body.v24-mobile-player #player[data-v24-panel="log"] .log-panel{display:block!important}
+
+  /* Scheda base. */
+  body.v24-mobile-player #player .hero{display:grid!important;grid-template-columns:92px minmax(0,1fr)!important;gap:10px!important;padding:11px!important;border-radius:18px!important}
+  body.v24-mobile-player #player .hero>div:not(.life-widget){padding-top:0!important;min-width:0!important}
+  body.v24-mobile-player #player .hero>img{width:92px!important;height:126px!important;object-fit:contain!important;object-position:center top!important;border-radius:13px!important;background:#06050a!important}
+  body.v24-mobile-player #player .life-widget{position:static!important;grid-column:1/-1!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:7px!important;min-width:0!important;width:100%!important;padding:9px 10px!important;text-align:left!important}
+  body.v24-mobile-player #player .life-label,body.v24-mobile-player #player .life-number{grid-column:1!important}
+  body.v24-mobile-player #player .life-number{margin:0!important}
+  body.v24-mobile-player #player .life-actions{grid-column:2!important;grid-row:1/3!important;display:grid!important;grid-template-columns:46px 46px!important;gap:6px!important}
+  body.v24-mobile-player #player .life-btn{min-width:46px!important;min-height:42px!important;font-size:.88rem!important}
+  body.v24-mobile-player #player .hero-name{font-size:1.15rem!important;line-height:1.15!important}
+  body.v24-mobile-player #player .hero-grade{font-size:.76rem!important}
+  body.v24-mobile-player #player .stats{grid-template-columns:1fr!important;gap:8px!important}
+  body.v24-mobile-player #player .stat-number{font-size:1.35rem!important}
+  body.v24-mobile-player #player .grade-row{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  body.v24-mobile-player #player .grade-btn{min-height:45px!important;padding:8px 4px!important;font-size:.75rem!important}
+
+  /* Tecniche: carte vere, non elementi assoluti. */
+  body.v24-mobile-player #player .game-moves-dropdown{display:block!important;border:0!important}
+  body.v24-mobile-player #player .game-moves-dropdown>summary{display:none!important}
+  body.v24-mobile-player #player .game-moves-body{display:block!important;padding:0 0 18px!important}
+  body.v24-mobile-player #player #techGrid{display:grid!important;grid-template-columns:1fr!important;gap:13px!important;width:100%!important;padding:0!important;overflow:visible!important}
+  body.v24-mobile-player #player #techGrid .tech-card{position:relative!important;display:block!important;width:100%!important;height:auto!important;min-height:0!important;overflow:hidden!important;border-radius:19px!important;background:linear-gradient(180deg,#0d0a13,#050308)!important;box-shadow:0 15px 34px rgba(0,0,0,.35)!important}
+  body.v24-mobile-player #player #techGrid .tech-card>img{position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:auto!important;min-height:250px!important;max-height:430px!important;aspect-ratio:4/5!important;margin:0!important;padding:8px!important;object-fit:contain!important;object-position:center center!important;background:radial-gradient(circle at 50% 45%,var(--accent-soft,rgba(84,191,255,.14)),#050308 74%)!important;border-radius:0!important}
+  body.v24-mobile-player #player #techGrid .tech-content{position:relative!important;inset:auto!important;display:block!important;min-height:0!important;padding:13px!important;background:linear-gradient(180deg,rgba(10,7,14,.95),#050308)!important}
+  body.v24-mobile-player #player #techGrid .tech-name{font-size:1rem!important;line-height:1.25!important}
+  body.v24-mobile-player #player #techGrid .tech-cost{margin:7px 0 10px!important;font-size:.8rem!important;line-height:1.42!important;min-height:0!important}
+  body.v24-mobile-player #player #techGrid .use-btn{position:relative!important;width:100%!important;min-height:52px!important;margin:0!important;font-size:.88rem!important;border-radius:12px!important;z-index:12!important}
+  body.v24-mobile-player #player #techGrid .tech-grade-badge{top:10px!important;left:10px!important;z-index:14!important}
+  body.v24-mobile-player #player .v24-tech-empty{padding:22px 15px;border:1px dashed rgba(105,177,231,.32);border-radius:16px;background:#0b0810;color:#aebdd0;text-align:center;line-height:1.5}
+
+  /* Risorse e movimenti. */
+  body.v24-mobile-player #player .side,body.v24-mobile-player #player .log-panel{position:static!important;width:100%!important;max-height:none!important;overflow:visible!important;padding:13px!important;border-radius:18px!important}
+  body.v24-mobile-player #player .side>h3{text-align:left!important;margin:15px 0 8px!important}
+  body.v24-mobile-player #player .side>h3:first-child{margin-top:0!important}
+  body.v24-mobile-player #player .energy-actions,
+  body.v24-mobile-player #player .exp-actions,
+  body.v24-mobile-player #player .combat-bonus-actions,
+  body.v24-mobile-player #player .token-actions,
+  body.v24-mobile-player #player .one-use-actions,
+  body.v24-mobile-player #player .itadori-finger-actions,
+  body.v24-mobile-player #player .yuta-actions,
+  body.v24-mobile-player #player .yuta-copy-resource-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+  body.v24-mobile-player #player .side button{min-width:0!important;min-height:50px!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  body.v24-mobile-player #player .energy-actions .full,
+  body.v24-mobile-player #player .toji-full,
+  body.v24-mobile-player #player .itadori-finger-btn.reset,
+  body.v24-mobile-player #player .yuta-btn.wide{grid-column:1/-1!important}
+  body.v24-mobile-player #player #playerMovementDropdown{display:block!important}
+  body.v24-mobile-player #player #playerMovementDropdown>summary{display:none!important}
+  body.v24-mobile-player #player #playerMovementDropdown .movement-dropdown-body{display:block!important;max-height:none!important;overflow:visible!important;padding:0!important}
+  body.v24-mobile-player #player .log-list{max-height:none!important;overflow:visible!important}
+  body.v24-mobile-player #player .log-item{font-size:.78rem!important}
+}
+
+/* ===== GAME MASTER: CARTE PULITE E MODIFICA RISORSE IN DRAWER ===== */
+#gameMaster .v24-gm-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0}
+#gameMaster .v24-gm-summary>div{padding:9px;border-radius:12px;border:1px solid #30253a;background:#0c0911;text-align:center}
+#gameMaster .v24-gm-summary span{display:block;color:#95a6bb;font-size:.61rem;text-transform:uppercase;letter-spacing:.06em}
+#gameMaster .v24-gm-summary b{display:block;margin-top:4px;color:#fff;font-size:.92rem}
+#gameMaster .v24-gm-card .mc-gm-resources,#gameMaster .v24-gm-card>.gm-resource-grid,#gameMaster .v24-gm-card>.gm-resource-editor{display:none!important}
+#gameMaster .v24-gm-card details:has(.gm-resource-editor){display:none!important}
+#gameMaster .v24-open-resources{width:100%;min-height:50px;margin:8px 0 10px;padding:10px 12px;border-radius:13px;border:1px solid rgba(91,180,240,.44);background:linear-gradient(135deg,#205978,#0e1a28);color:#eff9ff;font-weight:950;cursor:pointer}
+#gameMaster .v24-open-resources small{display:block;margin-top:3px;color:#a9c9dd;font-size:.64rem;font-weight:700}
+#gameMaster .v24-group-commands{margin:0 0 13px;border:1px solid #3b2d47;border-radius:16px;background:#0c0911;overflow:hidden}
+#gameMaster .v24-group-commands>summary{list-style:none;min-height:48px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;color:#eaf5ff;font-weight:950;cursor:pointer}
+#gameMaster .v24-group-commands>summary::-webkit-details-marker{display:none}
+#gameMaster .v24-group-commands>summary:after{content:'＋';color:#6fc8ff;font-size:1.1rem}
+#gameMaster .v24-group-commands[open]>summary:after{content:'−'}
+#gameMaster .v24-group-commands .gm-batch-editor,#gameMaster .v24-group-commands .gm-lock-actions{padding:0 11px 11px!important}
+
+.mobile-v24-gm-resource-drawer{position:fixed;inset:0;z-index:12000;align-items:center;justify-content:center;padding:16px;background:rgba(2,3,8,.82);backdrop-filter:blur(12px)}
+.mobile-v24-gm-resource-drawer.show{display:flex}
+.mobile-v24-gm-resource-card{width:min(600px,100%);max-height:calc(100dvh - 24px);overflow:auto;padding:18px;border-radius:23px;border:1px solid rgba(99,188,247,.42);background:linear-gradient(145deg,#15101f,#07050c);box-shadow:0 30px 80px rgba(0,0,0,.65),0 0 40px rgba(62,155,226,.17)}
+.mobile-v24-gm-resource-head{display:grid;grid-template-columns:58px minmax(0,1fr) 42px;gap:11px;align-items:center;margin-bottom:14px}
+.mobile-v24-gm-resource-head img{width:58px;height:58px;border-radius:14px;object-fit:cover;object-position:center top;border:1px solid #59446a}
+.mobile-v24-gm-resource-head h3{margin:0;font-size:1.13rem}.mobile-v24-gm-resource-head p{margin:4px 0 0;color:#9dacbe;font-size:.74rem}
+.mobile-v24-gm-close{width:42px;height:42px;border-radius:12px;border:1px solid #4a3a57;background:#17101f;color:#fff;font-size:1.1rem}
+.mobile-v24-gm-field{display:grid;gap:6px;margin-top:11px}.mobile-v24-gm-field span{color:#aab8c9;font-size:.67rem;text-transform:uppercase;letter-spacing:.07em;font-weight:900}
+.mobile-v24-gm-field select,.mobile-v24-gm-field input{width:100%;min-height:49px;padding:11px 12px;border-radius:12px;border:1px solid #4a3a58;background:#0b0810;color:#fff;font-size:16px}
+.mobile-v24-gm-current{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;padding:12px;border:1px solid #30253a;border-radius:13px;background:#0c0911}
+.mobile-v24-gm-current span{color:#9fb0c3;font-size:.74rem}.mobile-v24-gm-current b{font-size:1.35rem}
+.mobile-v24-gm-quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}
+.mobile-v24-gm-quick button,.mobile-v24-gm-custom button,.mobile-v24-gm-exact button{min-height:47px;border-radius:11px;color:#fff;font-weight:950}
+.mobile-v24-gm-minus{border:1px solid #9b4059;background:linear-gradient(135deg,#8e2947,#360d1a)}
+.mobile-v24-gm-plus{border:1px solid #3b8c68;background:linear-gradient(135deg,#297f5c,#103a2a)}
+.mobile-v24-gm-custom{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.mobile-v24-gm-exact{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:end;margin-top:12px}
+.mobile-v24-gm-exact .mobile-v24-gm-field{margin:0}.mobile-v24-gm-exact button{padding:0 13px;border:1px solid #3e7fa7;background:#17384f}.mobile-v24-gm-exact .zero{border-color:#814052;background:#3b2029}
+.mobile-v24-gm-status{min-height:21px;margin-top:10px;color:#9ed2f5;font-size:.75rem;text-align:center}
+.mobile-v24-gm-resource-card.busy{pointer-events:none;opacity:.7}
+
+@media (max-width:900px){
+  body.v24-mobile-gm #gameMaster{padding-bottom:var(--v24-safe-bottom)!important}
+  body.v24-mobile-gm #gameMaster .gm-command-center{padding:11px!important;border-radius:17px!important}
+  body.v24-mobile-gm #gameMaster .gm-command-header{display:block!important}
+  body.v24-mobile-gm #gameMaster .gm-live-dot{margin-top:8px!important}
+  body.v24-mobile-gm #gameMaster .gm-summary-v3{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+  body.v24-mobile-gm #gameMaster .gm-summary-card{padding:9px!important;grid-template-columns:35px minmax(0,1fr)!important;gap:7px!important}
+  body.v24-mobile-gm #gameMaster .gm-summary-icon{width:34px!important;height:34px!important}
+  body.v24-mobile-gm #gameMaster .gm-summary-value{font-size:.92rem!important;overflow-wrap:anywhere!important}
+  body.v24-mobile-gm #gameMaster .gm-tabs{position:sticky!important;top:calc(54px + env(safe-area-inset-top))!important;z-index:520!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:5px!important;padding:6px!important;margin:8px 0 12px!important;border-radius:14px!important;background:rgba(7,6,12,.97)!important;border:1px solid rgba(105,171,226,.16)!important;box-shadow:0 10px 24px rgba(0,0,0,.33)!important}
+  body.v24-mobile-gm #gameMaster .gm-tab{min-width:0!important;min-height:46px!important;padding:8px 5px!important;font-size:.66rem!important;white-space:normal!important}
+  body.v24-mobile-gm #gameMaster .gm-control-v3{padding:10px!important}
+  body.v24-mobile-gm #gameMaster .gm-control-head{display:block!important}
+  body.v24-mobile-gm #gameMaster .gm-player-filter{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;width:100%!important;margin-top:9px!important}
+  body.v24-mobile-gm #gameMaster .gm-player-filter input,body.v24-mobile-gm #gameMaster .gm-player-filter select{width:100%!important;min-height:46px!important}
+  body.v24-mobile-gm #gameMaster .gm-player-grid,body.v24-mobile-gm #gameMaster .mc-gm-grid{display:grid!important;grid-template-columns:1fr!important;gap:11px!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-card,body.v24-mobile-gm #gameMaster .gm-player-card{width:100%!important;min-width:0!important;padding:11px!important;border-radius:17px!important;overflow:hidden!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-head,body.v24-mobile-gm #gameMaster .gm-player-head{display:block!important;padding:0!important;margin:0!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-user{display:grid!important;grid-template-columns:auto 50px minmax(0,1fr)!important;gap:9px!important;align-items:center!important;width:100%!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-user img,body.v24-mobile-gm #gameMaster .gm-player-avatar{width:50px!important;height:50px!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-badges,body.v24-mobile-gm #gameMaster .gm-player-status-row{display:flex!important;flex-wrap:wrap!important;gap:5px!important;width:100%!important;margin-top:8px!important}
+  body.v24-mobile-gm #gameMaster .v24-gm-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-toggle-grid{grid-template-columns:1fr!important;gap:7px!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-toggle{min-height:58px!important;padding:10px!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-actions,body.v24-mobile-gm #gameMaster .gm-quick-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:0!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-actions button,body.v24-mobile-gm #gameMaster .gm-quick-actions button{min-width:0!important;min-height:48px!important;padding:8px 5px!important;font-size:.71rem!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  body.v24-mobile-gm #gameMaster .mc-gm-actions .kick,body.v24-mobile-gm #gameMaster .gm-kick-btn{grid-column:1/-1!important;width:100%!important}
+  body.v24-mobile-gm #gameMaster .gm-section-title-v3{display:block!important}
+  body.v24-mobile-gm #gameMaster .gm-section-title-v3 small{display:block;margin-top:5px;text-align:left!important}
+  body.v24-mobile-gm #gameMaster .gm-feed-v3{max-height:none!important;overflow:visible!important}
+  body.v24-mobile-gm #gameMaster .gm-ai-summary{grid-template-columns:1fr 1fr!important}
+  body.v24-mobile-gm #gameMaster .gm-ai-toolbar{display:flex!important;overflow-x:auto!important;flex-wrap:nowrap!important;padding-bottom:6px!important}
+  body.v24-mobile-gm #gameMaster .gm-ai-filter,body.v24-mobile-gm #gameMaster .gm-ai-auto{flex:0 0 auto!important}
+
+  .mobile-v24-gm-resource-drawer{align-items:flex-end!important;padding:0!important}
+  .mobile-v24-gm-resource-card{width:100%!important;max-height:92dvh!important;border-radius:24px 24px 0 0!important;padding:15px 13px calc(18px + env(safe-area-inset-bottom))!important}
+  .mobile-v24-gm-exact{grid-template-columns:1fr 1fr!important}.mobile-v24-gm-exact .mobile-v24-gm-field{grid-column:1/-1!important}
+}
+
+/* Il nuovo gestore risorse sostituisce il vecchio editor anche su PC,
+   evitando due controlli diversi per la stessa operazione. */
+#gameMaster .gm-player-card details[data-v24-old-resource]{display:none!important}
+#gameMaster .v24-gm-resource-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:calc(100% - 24px);min-height:52px;margin:0 12px 12px;padding:11px 14px;
+  border-radius:14px;border:1px solid rgba(78,173,238,.48);
+  background:linear-gradient(135deg,#1d5479,#101d2b);color:#fff;font-weight:950;cursor:pointer
+}
+#gameMaster .v24-gm-resource-btn span{display:block;min-width:0;text-align:left}
+#gameMaster .v24-gm-resource-btn b{display:block}
+#gameMaster .v24-gm-resource-btn small{display:block;margin-top:3px;color:#acd0e8;font-size:.66rem;font-weight:700;white-space:normal}
+#gameMaster .v24-gm-resource-btn strong{font-size:1.25rem;color:#8bd2ff}
