@@ -86,8 +86,6 @@ window.JJKSfx={
   setVolume(value){const next=Number(value);volume=Number.isFinite(next)?Math.max(0,Math.min(1,next)):volume;storageSet(VOLUME_KEY,String(volume));},
   getVolume(){return volume;}
 };
-
-/* Predisposizione per una futura libreria di voci autorizzate. Nessuna voce dell'anime è inclusa. */
 const voiceRegistry=new Map();let activeVoice=null;
 window.JJKVoice={
   register(characterId,context,src){if(!characterId||!context||!src)return;voiceRegistry.set(characterId+':'+context,src);},
@@ -99,4 +97,19 @@ window.JJKVoice={
   stop(){try{activeVoice?.pause();}catch(e){}activeVoice=null;}
 };
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+})();
+
+/* Caricamento del roster WebGL 3D. */
+(function(){
+  if(document.querySelector('[data-jjk-roster-3d-loader]'))return;
+  const style=document.createElement('link');
+  style.rel='stylesheet';
+  style.href='roster-3d.css?v=20260723r3d2';
+  style.dataset.jjkRoster3dLoader='style';
+  document.head.appendChild(style);
+  const script=document.createElement('script');
+  script.src='roster-3d.js?v=20260723r3d2';
+  script.defer=true;
+  script.dataset.jjkRoster3dLoader='script';
+  document.head.appendChild(script);
 })();
