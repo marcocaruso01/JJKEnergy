@@ -100,3 +100,18 @@ window.JJKVoice={
 };
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
+
+/* Caricamento del roster 3D cinematografico. */
+(function(){
+  if(document.querySelector('[data-jjk-roster-3d-loader]'))return;
+  const style=document.createElement('link');
+  style.rel='stylesheet';
+  style.href='roster-3d.css?v=20260723r3d1';
+  style.dataset.jjkRoster3dLoader='style';
+  document.head.appendChild(style);
+  const script=document.createElement('script');
+  script.src='roster-3d.js?v=20260723r3d1';
+  script.defer=true;
+  script.dataset.jjkRoster3dLoader='script';
+  document.head.appendChild(script);
+})();
