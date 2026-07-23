@@ -62,3 +62,18 @@ if(window.JJKEventsV26){const oldSync=window.JJKEventsV26.sync;window.JJKEventsV
 function init(){bind();render(true);setInterval(()=>render(false),500);console.info('JJK GM events panel ready',VERSION);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,120),{once:true});else setTimeout(init,120);
 })();
+
+/* Caricamento effettivo del roster WebGL 3D nella pagina pubblicata. */
+(function(){
+  if(document.querySelector('[data-jjk-roster-3d-live]'))return;
+  const style=document.createElement('link');
+  style.rel='stylesheet';
+  style.href='roster-3d.css?v=20260723r3d3';
+  style.dataset.jjkRoster3dLive='style';
+  document.head.appendChild(style);
+  const script=document.createElement('script');
+  script.src='roster-3d.js?v=20260723r3d3';
+  script.dataset.jjkRoster3dLive='script';
+  script.addEventListener('error',()=>console.error('[JJK 3D] Impossibile caricare roster-3d.js'));
+  document.body.appendChild(script);
+})();
