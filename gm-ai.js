@@ -6,124 +6,58 @@ const STORAGE_AUTO='jjk_gm_ai_auto_v1';
 const weights={critical:4,warning:3,info:2,success:1};
 const gradeOrder={G4:0,G3:1,G2:2,G1:3,SS:4,SG:5};
 const state={alerts:[],filter:'all',auto:localStorage.getItem(STORAGE_AUTO)!=='0',lastScan:0,timer:null,bound:false};
-
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 function getSession(){try{return roomSession||window.roomSession||null;}catch(e){return window.roomSession||null;}}
 function chars(){try{return characters;}catch(e){return window.characters||{};}}
 function getRank(id){try{return rank[id]??gradeOrder[id]??0;}catch(e){return gradeOrder[id]??0;}}
 function characterName(id){try{return characterDisplayName(id);}catch(e){return chars()[id]?.name||id||'Personaggio';}}
-function resourceMax(p){
-  try{const v=roomStateResourceMax(p);if(Number.isFinite(Number(v)))return Number(v);}catch(e){}
-  const ch=chars()[p.characterId],s=p.state||{},g=ch?.grades?.find(x=>x.id===(s.gradeId||'G4'))||ch?.grades?.[0];
-  let max=Number(g?.max||0);if(p.characterId==='itadori'&&Number(s.itadoriMaxFingers||0)>=10)max+=5;if(p.characterId==='jogo')max=Number(s.life||ch?.maxLife||0);return max;
-}
+function resourceMax(p){try{const v=roomStateResourceMax(p);if(Number.isFinite(Number(v)))return Number(v);}catch(e){}const ch=chars()[p.characterId],s=p.state||{},g=ch?.grades?.find(x=>x.id===(s.gradeId||'G4'))||ch?.grades?.[0];let max=Number(g?.max||0);if(p.characterId==='itadori'&&Number(s.itadoriMaxFingers||0)>=10)max+=5;if(p.characterId==='jogo')max=8;return max;}
 function expectedGrade(ch,exp){let out=ch?.grades?.[0]||{id:'G4',exp:0};(ch?.grades||[]).forEach(g=>{if(Number(exp||0)>=Number(g.exp||0))out=g;});return out;}
 function nextGrade(ch,gradeId){const index=(ch?.grades||[]).findIndex(g=>g.id===gradeId);return index>=0?ch.grades[index+1]||null:null;}
-function playerAvailableTechniques(p){
-  const ch=chars()[p.characterId],s=p.state||{},gid=s.gradeId||'G4',fingers=Number(s.itadoriMaxFingers||0);
-  return (ch?.techniques||[]).filter(t=>{
-    if(p.characterId==='itadori'&&t.fingerOnly)return fingers>=Number(t.fingerReq||0)&&!(t.instantWin&&gid==='SG');
-    return getRank(t.grade)<=getRank(gid);
-  });
-}
+function playerAvailableTechniques(p){const ch=chars()[p.characterId],s=p.state||{},gid=s.gradeId||'G4',fingers=Number(s.itadoriMaxFingers||0);return (ch?.techniques||[]).filter(t=>{if(p.characterId==='itadori'&&t.fingerOnly)return fingers>=Number(t.fingerReq||0)&&!(t.instantWin&&gid==='SG');return getRank(t.grade)<=getRank(gid);});}
 function alert(id,severity,title,detail,opts={}){return {id,severity,title,detail,icon:opts.icon||({critical:'!',warning:'△',info:'i',success:'✓'}[severity]),playerId:opts.playerId||null,playerName:opts.playerName||'',action:opts.action||null,actionLabel:opts.actionLabel||'',secondary:opts.secondary||null};}
 function playerTag(p){return {playerId:p.playerToken,playerName:p.name};}
-
 function analyze(){
-  const session=getSession(),out=[];
-  if(!session?.isHost||session.phase!=='playing')return out;
-  const players=(session.players||[]).filter(p=>!p.isHost),connected=players.filter(p=>p.connected!==false),active=players.filter(p=>!p.locked),bosses=players.filter(p=>p.bossRush);
-  if(!players.length){out.push(alert('no-players','critical','Nessun giocatore nella partita','La partita risulta avviata ma non ci sono partecipanti attivi.',{icon:'人'}));return out;}
-  if(!active.length){const first=connected[0];out.push(alert('no-turn','critical','Nessun turno attivo','Tutte le schede sono bloccate. Assegna il turno a un giocatore per far proseguire la partita.',{icon:'▶',action:first?{type:'giveTurn',playerId:first.playerToken}:null,actionLabel:first?'Dai turno a '+first.name:''}));}
-  if(active.length>1){out.push(alert('multi-turn','critical','Più giocatori hanno il controllo',active.map(p=>p.name).join(', ')+' risultano sbloccati contemporaneamente. Se non è intenzionale, blocca tutti e assegna un solo turno.',{icon:'⚠',action:{type:'lockAll'},actionLabel:'Blocca tutti'}));}
-  if(bosses.length>1){out.push(alert('multi-boss','critical','Boss Rush assegnata a più giocatori',bosses.map(p=>p.name).join(', ')+' risultano in Boss Rush. La modalità dovrebbe essere affidata a un solo giocatore.',{icon:'∞'}));}
-  if(!connected.length)out.push(alert('all-offline','critical','Tutti i giocatori sono offline','Lo stato resta salvato su Supabase, ma la partita è in attesa della loro riconnessione.',{icon:'⌁'}));
-  const offline=players.filter(p=>p.connected===false);if(offline.length)out.push(alert('offline-count','warning',offline.length+' giocator'+(offline.length===1?'e':'i')+' in riconnessione',offline.map(p=>p.name).join(', ')+'. Il loro posto e il personaggio rimangono riservati.',{icon:'⌁'}));
-
-  for(const p of players){
-    const ch=chars()[p.characterId],s=p.state||{},tag=playerTag(p);
-    if(!p.characterId){out.push(alert('no-character-'+p.playerToken,'critical',p.name+' non ha un personaggio','La partita è iniziata senza una scelta valida.',{...tag,icon:'?'}));continue;}
-    if(!s||!Object.keys(s).length){out.push(alert('no-state-'+p.playerToken,'warning','Stato non ancora sincronizzato',p.name+' non ha ancora inviato Vita, Energia ed EXP. Attendi la riconnessione o riapri la scheda.',{...tag,icon:'↻',action:{type:'focus',playerId:p.playerToken},actionLabel:'Apri giocatore'}));continue;}
-    const life=Number(s.life||0),maxLife=Number(s.maxLife||ch?.maxLife||0),energy=Number(s.energy||0),maxEnergy=resourceMax(p),exp=Number(s.exp||0),gid=s.gradeId||'G4';
-    if(p.connected===false&&!p.locked)out.push(alert('offline-turn-'+p.playerToken,'critical','Turno assegnato a un giocatore offline',p.name+' ha il controllo ma non è connesso. Bloccalo o assegna il turno a un altro giocatore.',{...tag,icon:'⛔',action:{type:'toggleLock',playerId:p.playerToken},actionLabel:'Blocca scheda'}));
-    if(life<=1)out.push(alert('low-life-'+p.playerToken,'warning','Vita critica: '+p.name,p.name+' è a '+life+'/'+maxLife+' Vita ed è vicino al respawn.',{...tag,icon:'♥',action:{type:'focus',playerId:p.playerToken},actionLabel:'Controlla'}));
-    if(maxLife>0&&life>maxLife)out.push(alert('extra-life-'+p.playerToken,'info','Vita temporanea attiva',p.name+' possiede '+(life-maxLife)+' Vita oltre il massimo ('+life+'/'+maxLife+'). È valido per gli eventi speciali.',{...tag,icon:'♥'}));
-    if(maxEnergy>0&&energy>maxEnergy)out.push(alert('extra-energy-'+p.playerToken,'info','Energia extra attiva',p.name+' possiede '+(energy-maxEnergy)+' punti oltre il massimo ('+energy+'/'+maxEnergy+').',{...tag,icon:'⚡'}));
-    const expected=expectedGrade(ch,exp);if(expected?.id&&expected.id!==gid)out.push(alert('grade-mismatch-'+p.playerToken,'warning','Grado ed EXP non allineati',p.name+' ha '+exp+' EXP ma risulta '+gid+'. Il grado atteso è '+expected.id+'. La prossima sincronizzazione dovrebbe correggerlo.',{...tag,icon:'階'}));
-    const next=nextGrade(ch,gid);if(next){const missing=Number(next.exp||0)-exp;if(missing>0&&missing<=3)out.push(alert('near-grade-'+p.playerToken,'info',p.name+' è vicino alla promozione','Mancano '+missing+' EXP per raggiungere '+next.id+'.',{...tag,icon:'↑'}));}
-    if(p.bossRush){out.push(alert('boss-'+p.playerToken,'success','Boss Rush attiva su '+p.name,'Le tecniche non consumano risorse e, alla disattivazione, verranno ripristinati i valori precedenti.',{...tag,icon:'∞'}));if(p.locked)out.push(alert('boss-locked-'+p.playerToken,'warning','Boss Rush attiva ma scheda bloccata',p.name+' non può usare il personaggio finché non riceve il turno.',{...tag,icon:'∞',action:{type:'toggleLock',playerId:p.playerToken},actionLabel:'Sblocca'}));}
-    if(p.energyDiscount)out.push(alert('discount-'+p.playerToken,'info','Sconto tecniche attivo',p.name+' paga 3 Energia in meno per le tecniche compatibili.',{...tag,icon:'−3'}));
-    if(p.selfManage===false)out.push(alert('manage-off-'+p.playerToken,'info','Risorse sotto controllo GM',p.name+' non può modificare autonomamente EXP, Energia o risorse speciali.',{...tag,icon:'🔒'}));
-
-    const available=playerAvailableTechniques(p),used=new Set(Array.isArray(s.used)?s.used:[]),remaining=available.filter(t=>!used.has(t.key));
-    if(available.length&&remaining.length===0)out.push(alert('all-used-'+p.playerToken,'info','Tutte le tecniche risultano utilizzate',p.name+' potrebbe aver bisogno di “Nuovo combattimento” prima del prossimo scontro.',{...tag,icon:'術'}));
-    const positiveCosts=remaining.map(t=>Number(t.cost||0)).filter(v=>v>0);const minCost=positiveCosts.length?Math.min(...positiveCosts):0;
-    if(minCost>0&&energy<minCost&&p.characterId!=='toji'&&p.characterId!=='jogo'&&!p.bossRush)out.push(alert('low-energy-'+p.playerToken,'warning','Poche risorse per le tecniche',p.name+' ha '+energy+' Energia; la tecnica disponibile meno costosa richiede '+minCost+'.',{...tag,icon:'⚡'}));
-
-    if(p.characterId==='geto'){
-      const tokens=Number(s.tokens||0);if(tokens>=20)out.push(alert('geto-uzumaki-'+p.playerToken,'success','Uzumaki pronto',p.name+' possiede '+tokens+' Segnalini Maledetti e soddisfa il requisito della tecnica SG.',{...tag,icon:'◉'}));
-      else if(tokens>=15)out.push(alert('geto-near-'+p.playerToken,'info','Geto vicino a Uzumaki','Mancano '+(20-tokens)+' Segnalini Maledetti.',{...tag,icon:'◌'}));
-    }
-    if(p.characterId==='toji'){
-      const collected=Number(s.tojiCollectedEnergy||0),force=Math.min(2,Math.floor(collected/10));if(force>0)out.push(alert('toji-force-'+p.playerToken,'success','Gettoni Forza disponibili',p.name+' ha '+force+' Getton'+(force===1?'e':'i')+' Forza, pari a +'+(force*2)+' Corpo monouso.',{...tag,icon:'拳'}));
-    }
-    if(p.characterId==='itadori'){
-      const fingers=Number(s.itadoriMaxFingers||s.itadoriFingers||0),milestone=[20,15,10,5].find(v=>fingers>=v);if(milestone)out.push(alert('itadori-fingers-'+p.playerToken,'success','Risveglio di '+milestone+' dita raggiunto',p.name+' ha raggiunto la soglia di '+milestone+' Dita di Sukuna.',{...tag,icon:'宿'}));
-      if(Number(s.itadoriOneUse||0)>0)out.push(alert('itadori-choso-'+p.playerToken,'info','Aiuto di Choso preparato',p.name+' ha +'+s.itadoriOneUse+' Corpo monouso pronto per la prossima tecnica da combattimento.',{...tag,icon:'血'}));
-    }
-    if(p.characterId==='jogo'){
-      if(energy!==life)out.push(alert('jogo-sync-'+p.playerToken,'warning','Jogo: Vita ed Energia non coincidono','Lo stato mostra Vita '+life+' ed Energia '+energy+'. Per Jogo i due valori devono rimanere uguali.',{...tag,icon:'火'}));
-      if(gid==='SG'&&Number(s.jogoHeat||0)>=8)out.push(alert('jogo-heat-'+p.playerToken,'success','Calore massimo raggiunto',p.name+' ha accumulato 8/8 Calore, pari a +8 Corpo.',{...tag,icon:'♨'}));
-    }
-    if(p.characterId==='megumi'&&s.megumiCompanionOn){const bonus=gid==='G4'?2:3;out.push(alert('megumi-shikigami-'+p.playerToken,'info','Shikigami al seguito',p.name+' ha il compagno attivo e riceve +'+bonus+' Corpo nelle tecniche compatibili.',{...tag,icon:'影'}));}
-    if(p.characterId==='yuta'){
-      if(s.yutaCopiedTechnique)out.push(alert('yuta-copy-'+p.playerToken,'info','Tecnica copiata memorizzata',p.name+' sta conservando “'+(s.yutaCopiedTechnique.techName||s.yutaCopiedTechnique.name||'Tecnica')+'”.',{...tag,icon:'愛'}));
-      if(s.yutaKatanaActive)out.push(alert('yuta-katana-'+p.playerToken,'success','Katana Maledetta pronta',p.name+' può sommare +3 Combattimento alla prossima tecnica compatibile.',{...tag,icon:'刃'}));
-    }
-    const last=(Array.isArray(s.log)&&s.log[0])||null;if(last&&/azione fallita|insufficiente/i.test((last.title||'')+' '+(last.detail||'')))out.push(alert('last-fail-'+p.playerToken,'warning','Ultima azione non riuscita',p.name+': '+String(last.detail||last.title).slice(0,180),{...tag,icon:'×'}));
-  }
-  if(!out.some(a=>a.severity==='critical'||a.severity==='warning'))out.push(alert('all-good','success','Partita sotto controllo','Non risultano anomalie critiche. L’assistente continuerà a monitorare turni, risorse e abilità speciali.',{icon:'✓'}));
-  return out.sort((a,b)=>weights[b.severity]-weights[a.severity]||a.title.localeCompare(b.title,'it'));
+ const session=getSession(),out=[];if(!session?.isHost||session.phase!=='playing')return out;
+ const players=(session.players||[]).filter(p=>!p.isHost),connected=players.filter(p=>p.connected!==false),active=players.filter(p=>!p.locked),bosses=players.filter(p=>p.bossRush);
+ if(!players.length){out.push(alert('no-players','critical','Nessun giocatore nella partita','La partita risulta avviata ma non ci sono partecipanti attivi.',{icon:'人'}));return out;}
+ if(!active.length){const first=connected[0];out.push(alert('no-turn','critical','Nessun turno attivo','Tutte le schede sono bloccate. Assegna il turno a un giocatore per far proseguire la partita.',{icon:'▶',action:first?{type:'giveTurn',playerId:first.playerToken}:null,actionLabel:first?'Dai turno a '+first.name:''}));}
+ if(active.length>1)out.push(alert('multi-turn','critical','Più giocatori hanno il controllo',active.map(p=>p.name).join(', ')+' risultano sbloccati contemporaneamente.',{icon:'⚠',action:{type:'lockAll'},actionLabel:'Blocca tutti'}));
+ if(bosses.length>1)out.push(alert('multi-boss','critical','Boss Rush assegnata a più giocatori',bosses.map(p=>p.name).join(', ')+' risultano in Boss Rush.',{icon:'∞'}));
+ if(!connected.length)out.push(alert('all-offline','critical','Tutti i giocatori sono offline','Lo stato resta salvato su Supabase, ma la partita è in attesa della loro riconnessione.',{icon:'⌁'}));
+ const offline=players.filter(p=>p.connected===false);if(offline.length)out.push(alert('offline-count','warning',offline.length+' giocator'+(offline.length===1?'e':'i')+' in riconnessione',offline.map(p=>p.name).join(', ')+'. Il loro posto e il personaggio rimangono riservati.',{icon:'⌁'}));
+ for(const p of players){
+  const ch=chars()[p.characterId],s=p.state||{},tag=playerTag(p);if(!p.characterId){out.push(alert('no-character-'+p.playerToken,'critical',p.name+' non ha un personaggio','La partita è iniziata senza una scelta valida.',{...tag,icon:'?'}));continue;}if(!s||!Object.keys(s).length){out.push(alert('no-state-'+p.playerToken,'warning','Stato non ancora sincronizzato',p.name+' non ha ancora inviato Vita, Energia ed EXP.',{...tag,icon:'↻',action:{type:'focus',playerId:p.playerToken},actionLabel:'Apri giocatore'}));continue;}
+  const gid=s.gradeId||'G4',tojiMonster=p.characterId==='toji'&&getRank(gid)>=getRank('SS'),life=Number(s.life||0),maxLife=Number(s.maxLife||(tojiMonster?10:ch?.maxLife)||0),energy=Number(s.energy||0),maxEnergy=resourceMax(p),exp=Number(s.exp||0);
+  if(p.connected===false&&!p.locked)out.push(alert('offline-turn-'+p.playerToken,'critical','Turno assegnato a un giocatore offline',p.name+' ha il controllo ma non è connesso.',{...tag,icon:'⛔',action:{type:'toggleLock',playerId:p.playerToken},actionLabel:'Blocca scheda'}));
+  if(life<=1)out.push(alert('low-life-'+p.playerToken,'warning','Vita critica: '+p.name,p.name+' è a '+life+'/'+maxLife+' Vita ed è vicino al respawn.',{...tag,icon:'♥',action:{type:'focus',playerId:p.playerToken},actionLabel:'Controlla'}));
+  if(maxLife>0&&life>maxLife)out.push(alert('extra-life-'+p.playerToken,'info','Vita temporanea attiva',p.name+' possiede '+(life-maxLife)+' Vita oltre il massimo ('+life+'/'+maxLife+').',{...tag,icon:'♥'}));
+  if(maxEnergy>0&&energy>maxEnergy)out.push(alert('extra-energy-'+p.playerToken,'info','Energia extra attiva',p.name+' possiede '+(energy-maxEnergy)+' punti oltre il massimo.',{...tag,icon:'⚡'}));
+  const expected=expectedGrade(ch,exp);if(expected?.id&&expected.id!==gid)out.push(alert('grade-mismatch-'+p.playerToken,'warning','Grado ed EXP non allineati',p.name+' ha '+exp+' EXP ma risulta '+gid+'. Il grado atteso è '+expected.id+'.',{...tag,icon:'階'}));
+  const next=nextGrade(ch,gid);if(next){const missing=Number(next.exp||0)-exp;if(missing>0&&missing<=3)out.push(alert('near-grade-'+p.playerToken,'info',p.name+' è vicino alla promozione','Mancano '+missing+' EXP per raggiungere '+next.id+'.',{...tag,icon:'↑'}));}
+  if(p.bossRush)out.push(alert('boss-'+p.playerToken,'success','Boss Rush attiva su '+p.name,'Le tecniche non consumano risorse e, alla disattivazione, verranno ripristinati i valori precedenti.',{...tag,icon:'∞'}));
+  if(p.energyDiscount)out.push(alert('discount-'+p.playerToken,'info','Sconto tecniche attivo',p.name+' paga 3 Energia in meno per le tecniche compatibili.',{...tag,icon:'−3'}));
+  if(p.selfManage===false)out.push(alert('manage-off-'+p.playerToken,'info','Risorse sotto controllo GM',p.name+' non può modificare autonomamente EXP, Energia o risorse speciali.',{...tag,icon:'🔒'}));
+  const available=playerAvailableTechniques(p),used=new Set(Array.isArray(s.used)?s.used:[]),remaining=available.filter(t=>!used.has(t.key));if(available.length&&remaining.length===0)out.push(alert('all-used-'+p.playerToken,'info','Tutte le tecniche risultano utilizzate',p.name+' potrebbe aver bisogno di “Nuovo combattimento”.',{...tag,icon:'術'}));
+  const positiveCosts=remaining.map(t=>Number(t.cost||0)).filter(v=>v>0),minCost=positiveCosts.length?Math.min(...positiveCosts):0;if(minCost>0&&energy<minCost&&p.characterId!=='toji'&&p.characterId!=='jogo'&&!p.bossRush)out.push(alert('low-energy-'+p.playerToken,'warning','Poche risorse per le tecniche',p.name+' ha '+energy+' Energia; la tecnica meno costosa richiede '+minCost+'.',{...tag,icon:'⚡'}));
+  if(p.characterId==='geto'){const tokens=Number(s.tokens||0);if(tokens>=20)out.push(alert('geto-uzumaki-'+p.playerToken,'success','Uzumaki pronto',p.name+' possiede '+tokens+' Segnalini Maledetti.',{...tag,icon:'◉'}));else if(tokens>=15)out.push(alert('geto-near-'+p.playerToken,'info','Geto vicino a Uzumaki','Mancano '+(20-tokens)+' Segnalini Maledetti.',{...tag,icon:'◌'}));}
+  if(p.characterId==='toji'){const collected=Number(s.tojiCollectedEnergy||0),force=Math.min(2,Math.floor(collected/10));if(force>0)out.push(alert('toji-force-'+p.playerToken,'success','Gettoni Forza disponibili',p.name+' ha '+force+' Getton'+(force===1?'e':'i')+' Forza, pari a +'+(force*2)+' Corpo monouso.',{...tag,icon:'拳'}));if(tojiMonster)out.push(alert('toji-monster-'+p.playerToken,'success','Mostro Senza Energia Maledetta attivo',p.name+' mantiene automaticamente +2 Corpo base e +2 Vita massima finché resta al grado SS o SG.',{...tag,icon:'刃'}));}
+  if(p.characterId==='itadori'){const fingers=Number(s.itadoriMaxFingers||s.itadoriFingers||0),milestone=[20,15,10,5].find(v=>fingers>=v);if(milestone)out.push(alert('itadori-fingers-'+p.playerToken,'success','Risveglio di '+milestone+' dita raggiunto',p.name+' ha raggiunto la soglia di '+milestone+' Dita di Sukuna.',{...tag,icon:'宿'}));if(Number(s.itadoriOneUse||0)>0)out.push(alert('itadori-choso-'+p.playerToken,'info','Aiuto di Choso preparato',p.name+' ha +'+s.itadoriOneUse+' Corpo monouso pronto.',{...tag,icon:'血'}));}
+  if(p.characterId==='jogo'){if(life>8||energy>8)out.push(alert('jogo-cap-'+p.playerToken,'critical','Jogo supera il limite massimo','Jogo deve avere Vita/Energia tra 0 e 8. Valore attuale: '+life+'/'+energy+'.',{...tag,icon:'火'}));if(energy!==life)out.push(alert('jogo-sync-'+p.playerToken,'warning','Jogo: Vita ed Energia non coincidono','Vita '+life+' ed Energia '+energy+' devono restare uguali.',{...tag,icon:'火'}));if(gid!=='SG'&&Number(s.jogoHeat||0)>0)out.push(alert('jogo-heat-locked-'+p.playerToken,'warning','Calore prima del grado SG',p.name+' possiede '+s.jogoHeat+' Calore ma questa risorsa si attiva soltanto al grado SG.',{...tag,icon:'♨'}));if(gid==='SG'&&Number(s.jogoHeat||0)>=8)out.push(alert('jogo-heat-'+p.playerToken,'success','Calore massimo raggiunto',p.name+' ha accumulato 8/8 Calore, pari a +8 Corpo.',{...tag,icon:'♨'}));}
+  if(p.characterId==='megumi'&&s.megumiCompanionOn){const bonus=gid==='G4'?2:3;out.push(alert('megumi-shikigami-'+p.playerToken,'info','Shikigami al seguito',p.name+' riceve +'+bonus+' Corpo nelle tecniche compatibili.',{...tag,icon:'影'}));}
+  if(p.characterId==='yuta'){if(s.yutaCopiedTechnique)out.push(alert('yuta-copy-'+p.playerToken,'info','Tecnica copiata memorizzata',p.name+' conserva “'+(s.yutaCopiedTechnique.techName||s.yutaCopiedTechnique.name||'Tecnica')+'”.',{...tag,icon:'愛'}));if(s.yutaKatanaActive)out.push(alert('yuta-katana-'+p.playerToken,'success','Katana Maledetta pronta',p.name+' può sommare +3 Combattimento alla prossima tecnica compatibile.',{...tag,icon:'刃'}));}
+ }
+ if(!out.some(a=>a.severity==='critical'||a.severity==='warning'))out.push(alert('all-good','success','Partita sotto controllo','Non risultano anomalie critiche.',{icon:'✓'}));return out.sort((a,b)=>weights[b.severity]-weights[a.severity]||a.title.localeCompare(b.title,'it'));
 }
-
 function counts(alerts){return {critical:alerts.filter(a=>a.severity==='critical').length,warning:alerts.filter(a=>a.severity==='warning').length,info:alerts.filter(a=>a.severity==='info').length,success:alerts.filter(a=>a.severity==='success').length};}
 function filtered(){return state.filter==='all'?state.alerts:state.alerts.filter(a=>a.severity===state.filter);}
-function render(){
-  const list=document.getElementById('gmAiAlerts');if(!list)return;const c=counts(state.alerts),visible=filtered();
-  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};set('gmAiCritical',c.critical);set('gmAiWarning',c.warning);set('gmAiInfo',c.info);set('gmAiSuccess',c.success);
-  set('gmAiStatus',state.alerts.length+' controlli · '+new Date(state.lastScan||Date.now()).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
-  document.querySelectorAll('.gm-ai-filter').forEach(btn=>btn.classList.toggle('active',btn.dataset.aiFilter===state.filter));const auto=document.getElementById('gmAiAuto');if(auto){auto.classList.toggle('on',state.auto);auto.setAttribute('aria-pressed',state.auto?'true':'false');}
-  if(!visible.length){list.innerHTML='<div class="gm-ai-empty"><strong>Nessun avviso in questa categoria</strong>Prova un altro filtro oppure avvia una nuova scansione.</div>';return;}
-  list.innerHTML=visible.map(a=>'<article class="gm-ai-alert '+a.severity+'"><div class="gm-ai-alert-icon">'+esc(a.icon)+'</div><div class="gm-ai-alert-copy"><div class="gm-ai-alert-title">'+esc(a.title)+'</div><div class="gm-ai-alert-detail">'+esc(a.detail)+'</div>'+(a.playerName?'<span class="gm-ai-alert-player">'+esc(a.playerName)+'</span>':'')+'</div><div class="gm-ai-alert-actions">'+(a.action?'<button class="gm-ai-action" data-ai-action="'+esc(a.action.type)+'" data-player-id="'+esc(a.action.playerId||'')+'">'+esc(a.actionLabel||'Applica')+'</button>':'')+(a.playerId?'<button class="gm-ai-action ghost" data-ai-action="focus" data-player-id="'+esc(a.playerId)+'">Mostra scheda</button>':'')+'</div></article>').join('');
-}
+function render(){const list=document.getElementById('gmAiAlerts');if(!list)return;const c=counts(state.alerts),visible=filtered(),set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};set('gmAiCritical',c.critical);set('gmAiWarning',c.warning);set('gmAiInfo',c.info);set('gmAiSuccess',c.success);set('gmAiStatus',state.alerts.length+' controlli · '+new Date(state.lastScan||Date.now()).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));document.querySelectorAll('.gm-ai-filter').forEach(btn=>btn.classList.toggle('active',btn.dataset.aiFilter===state.filter));const auto=document.getElementById('gmAiAuto');if(auto){auto.classList.toggle('on',state.auto);auto.setAttribute('aria-pressed',state.auto?'true':'false');}if(!visible.length){list.innerHTML='<div class="gm-ai-empty"><strong>Nessun avviso in questa categoria</strong>Prova un altro filtro oppure avvia una nuova scansione.</div>';return;}list.innerHTML=visible.map(a=>'<article class="gm-ai-alert '+a.severity+'"><div class="gm-ai-alert-icon">'+esc(a.icon)+'</div><div class="gm-ai-alert-copy"><div class="gm-ai-alert-title">'+esc(a.title)+'</div><div class="gm-ai-alert-detail">'+esc(a.detail)+'</div>'+(a.playerName?'<span class="gm-ai-alert-player">'+esc(a.playerName)+'</span>':'')+'</div><div class="gm-ai-alert-actions">'+(a.action?'<button class="gm-ai-action" data-ai-action="'+esc(a.action.type)+'" data-player-id="'+esc(a.action.playerId||'')+'">'+esc(a.actionLabel||'Applica')+'</button>':'')+(a.playerId?'<button class="gm-ai-action ghost" data-ai-action="focus" data-player-id="'+esc(a.playerId)+'">Mostra scheda</button>':'')+'</div></article>').join('');}
 function scan(manual=false){state.alerts=analyze();state.lastScan=Date.now();render();if(manual){try{window.JJKSfx?.play('confirm');}catch(e){}}return state.alerts;}
-async function runAction(type,playerId){
-  const session=getSession();if(!session?.isHost)return;
-  try{
-    if(type==='giveTurn'&&playerId)await gmGiveTurn(playerId);
-    else if(type==='toggleLock'&&playerId)await gmTogglePlayerLock(playerId);
-    else if(type==='lockAll')await gmSetGroupLock(true,'all');
-    else if(type==='focus'){
-      gmSetView('players');setTimeout(()=>{const card=document.querySelector('[data-player-token="'+CSS.escape(playerId)+'"]');card?.scrollIntoView({behavior:'smooth',block:'center'});card?.animate?.([{boxShadow:'0 0 0 0 rgba(84,191,255,0)'},{boxShadow:'0 0 0 4px rgba(84,191,255,.45)'},{boxShadow:'0 0 0 0 rgba(84,191,255,0)'}],{duration:900});},80);return;
-    }
-    setTimeout(()=>scan(false),450);
-  }catch(error){try{showModal('Azione non completata','',String(error?.message||error));}catch(e){}}
-}
-function bind(){
-  if(state.bound)return;state.bound=true;
-  document.addEventListener('click',event=>{
-    const filter=event.target.closest('[data-ai-filter]');if(filter){state.filter=filter.dataset.aiFilter||'all';render();return;}
-    const action=event.target.closest('[data-ai-action]');if(action){runAction(action.dataset.aiAction,action.dataset.playerId||'');return;}
-    const auto=event.target.closest('#gmAiAuto');if(auto){state.auto=!state.auto;localStorage.setItem(STORAGE_AUTO,state.auto?'1':'0');render();}
-  });
-}
-function wrapGlobals(){
-  let baseRender=null;try{baseRender=renderGMDashboard;}catch(e){baseRender=window.renderGMDashboard;}
-  if(typeof baseRender==='function'&&!baseRender.__gmAiWrapped){const wrapped=function(){const out=baseRender.apply(this,arguments);setTimeout(()=>scan(false),0);return out;};wrapped.__gmAiWrapped=true;try{renderGMDashboard=wrapped;}catch(e){window.renderGMDashboard=wrapped;}}
-  let baseView=null;try{baseView=gmSetView;}catch(e){baseView=window.gmSetView;}
-  if(typeof baseView==='function'&&!baseView.__gmAiWrapped){const wrapped=function(view){const out=baseView.apply(this,arguments);if(view==='assistant')setTimeout(()=>scan(true),20);return out;};wrapped.__gmAiWrapped=true;try{gmSetView=wrapped;}catch(e){window.gmSetView=wrapped;}}
-}
+async function runAction(type,playerId){const session=getSession();if(!session?.isHost)return;try{if(type==='giveTurn'&&playerId)await gmGiveTurn(playerId);else if(type==='toggleLock'&&playerId)await gmTogglePlayerLock(playerId);else if(type==='lockAll')await gmSetGroupLock(true,'all');else if(type==='focus'){gmSetView('players');setTimeout(()=>{const card=document.querySelector('[data-player-token="'+CSS.escape(playerId)+'"]');card?.scrollIntoView({behavior:'smooth',block:'center'});},80);return;}setTimeout(()=>scan(false),450);}catch(error){try{showModal('Azione non completata','',String(error?.message||error));}catch(e){}}}
+function bind(){if(state.bound)return;state.bound=true;document.addEventListener('click',event=>{const filter=event.target.closest('[data-ai-filter]');if(filter){state.filter=filter.dataset.aiFilter||'all';render();return;}const action=event.target.closest('[data-ai-action]');if(action){runAction(action.dataset.aiAction,action.dataset.playerId||'');return;}const auto=document.getElementById('gmAiAuto');if(event.target.closest('#gmAiAuto')){state.auto=!state.auto;localStorage.setItem(STORAGE_AUTO,state.auto?'1':'0');render();}});}
+function wrapGlobals(){let baseRender=null;try{baseRender=renderGMDashboard;}catch(e){baseRender=window.renderGMDashboard;}if(typeof baseRender==='function'&&!baseRender.__gmAiWrapped){const wrapped=function(){const out=baseRender.apply(this,arguments);setTimeout(()=>scan(false),0);return out;};wrapped.__gmAiWrapped=true;try{renderGMDashboard=wrapped;}catch(e){window.renderGMDashboard=wrapped;}}let baseView=null;try{baseView=gmSetView;}catch(e){baseView=window.gmSetView;}if(typeof baseView==='function'&&!baseView.__gmAiWrapped){const wrapped=function(view){const out=baseView.apply(this,arguments);if(view==='assistant')setTimeout(()=>scan(true),20);return out;};wrapped.__gmAiWrapped=true;try{gmSetView=wrapped;}catch(e){window.gmSetView=wrapped;}}}
 function init(){bind();wrapGlobals();scan(false);clearInterval(state.timer);state.timer=setInterval(()=>{const active=document.getElementById('gameMaster')?.classList.contains('active'),assistant=document.getElementById('gmViewAssistant')?.classList.contains('active');if(state.auto&&active&&assistant)scan(false);},3500);}
 window.JJKGMIntel={scan:()=>scan(true),setFilter(value){state.filter=value||'all';render();},toggleAuto(){state.auto=!state.auto;localStorage.setItem(STORAGE_AUTO,state.auto?'1':'0');render();},getAlerts(){return state.alerts.slice();}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
+(function(){'use strict';function loadV36(){if(!document.querySelector('link[data-jjk-v36]')){const link=document.createElement('link');link.rel='stylesheet';link.href='v36-update.css?v=20260724v36';link.dataset.jjkV36='style';document.head.appendChild(link);}if(!document.querySelector('script[data-jjk-v36]')){const script=document.createElement('script');script.src='v36-update.js?v=20260724v36';script.dataset.jjkV36='script';document.body.appendChild(script);}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadV36,{once:true});else loadV36();})();
