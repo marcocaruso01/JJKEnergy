@@ -100,3 +100,13 @@ window.JJKVoice={
 };
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
+
+/* V36.2: regole corrette per Toji, Copia di Yuta e Dominio di Megumi. */
+(function(){
+  if(document.querySelector('[data-jjk-v362-rules]'))return;
+  const script=document.createElement('script');
+  script.src='v362-rules-hotfix.js?v=20260724v362';
+  script.defer=true;
+  script.dataset.jjkV362Rules='1';
+  document.head.appendChild(script);
+})();
