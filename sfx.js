@@ -110,3 +110,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   script.dataset.jjkV362Rules='1';
   document.head.appendChild(script);
 })();
+
+/* V36.3: copia completa delle tecniche speciali. */
+(function(){
+  if(document.querySelector('[data-jjk-v363-copy]'))return;
+  const script=document.createElement('script');
+  script.src='v363-copy-complete.js?v=20260725v363';
+  script.defer=true;
+  script.dataset.jjkV363Copy='1';
+  document.head.appendChild(script);
+})();
