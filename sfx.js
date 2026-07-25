@@ -120,3 +120,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   script.dataset.jjkV363Copy='1';
   document.head.appendChild(script);
 })();
+
+/* V36.4: finestre grafiche per scelte, numeri e dadi delle tecniche. */
+(function(){
+  if(document.querySelector('[data-jjk-v364-inputs]'))return;
+  const script=document.createElement('script');
+  script.src='v364-pretty-technique-inputs.js?v=20260725v364';
+  script.defer=true;
+  script.dataset.jjkV364Inputs='1';
+  document.head.appendChild(script);
+})();
