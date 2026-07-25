@@ -1,0 +1,67 @@
+name: Patch V36.6 Technique UI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-v366-technique-ui.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch index loader
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          text = text.replace(
+              '<script src="sfx.js?v=20260714s2"></script>',
+              '<script src="sfx.js?v=20260725s366"></script>'
+          )
+
+          loader = '<script src="v366-technique-ui.js?v=20260725v366"></script>'
+          anchor = '<script src="ascension-v34.js?v=20260723v35"></script>'
+
+          if loader not in text:
+              if anchor not in text:
+                  raise SystemExit('Anchor ascension-v34.js not found in index.html')
+              text = text.replace(anchor, anchor + '\n' + loader)
+
+          path.write_text(text, encoding='utf-8')
+
+          assert 'sfx.js?v=20260725s366' in text
+          assert loader in text
+          assert text.index(loader) > text.index('rework-v27.js?v=20260721v27')
+          print('index.html patched and verified')
+          PY
+
+      - name: Verify JavaScript syntax
+        run: |
+          node --check v366-technique-ui.js
+          node --check v365-late-technique-ui.js
+          node --check v364-pretty-technique-inputs.js
+
+      - name: Commit patched index
+        run: |
+          if git diff --quiet; then
+            echo 'No changes required'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix(v36.6): load visual technique UI after rework'
+          git push origin HEAD:main
