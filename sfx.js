@@ -125,8 +125,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (function(){
   if(document.querySelector('[data-jjk-v364-inputs]'))return;
   const script=document.createElement('script');
-  script.src='v364-pretty-technique-inputs.js?v=20260725v364';
+  script.src='v364-pretty-technique-inputs.js?v=20260725v364b';
   script.defer=true;
   script.dataset.jjkV364Inputs='1';
+  document.head.appendChild(script);
+})();
+
+/* V36.5: collega i selettori dopo il caricamento del rework finale. */
+(function(){
+  if(document.querySelector('[data-jjk-v365-late-ui]'))return;
+  const script=document.createElement('script');
+  script.src='v365-late-technique-ui.js?v=20260725v365';
+  script.defer=true;
+  script.dataset.jjkV365LateUi='1';
   document.head.appendChild(script);
 })();
