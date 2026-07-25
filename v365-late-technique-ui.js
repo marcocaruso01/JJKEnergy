@@ -1,7 +1,7 @@
 /* JJK Energy V36.5 - rebind tardivo dei selettori grafici */
 (function(){
 'use strict';
-const VERSION='36.5.0';
+const VERSION='36.5.1';
 function read(name,fallback=null){try{const value=eval(name);return value===undefined?fallback:value;}catch(_){return window[name]===undefined?fallback:window[name];}}
 const currentId=()=>read('currentId',null);
 const current=()=>read('current',null);
@@ -26,7 +26,38 @@ function selector(id,t,isCopy){
  return null;
 }
 async function collect(spec){const ui=window.JJKV364;if(!ui||!spec)return null;if(spec.kind==='choice')return ui.choose(spec.meta,spec.options);if(spec.kind==='number')return ui.chooseNumber(spec.meta,spec.config);if(spec.kind==='dice')return ui.chooseDice(spec.meta,spec.config);return null;}
-function runWithPrompt(original,context,args,value){const previous=window.prompt;window.prompt=()=>String(value);try{return original.apply(context,args);}finally{window.prompt=previous;}}
+function withPrompt(value,callback){const previous=window.prompt;window.prompt=()=>String(value);try{return callback();}finally{window.prompt=previous;}}
+function techniqueForButton(button){
+ const ch=current();if(!ch)return {technique:null,isCopy:false,source:null};
+ const card=button.closest('.tech-card');if(!card)return {technique:null,isCopy:false,source:null};
+ const visibleName=(card.querySelector('.tech-name')?.textContent||'').trim();
+ if(currentId()==='yuta'&&visibleName.startsWith('Copia:')){
+   const source=copiedSource();
+   return {technique:source?.t||null,isCopy:true,source};
+ }
+ const technique=(ch.techniques||[]).find(t=>t.name===visibleName)||null;
+ return {technique,isCopy:false,source:null};
+}
+function installCapture(){
+ if(document.documentElement.dataset.v365Capture==='1')return;
+ document.documentElement.dataset.v365Capture='1';
+ document.addEventListener('click',event=>{
+   const button=event.target.closest('#techGrid .use-btn');
+   if(!button||button.dataset.v365Replay==='1')return;
+   const info=techniqueForButton(button);
+   if(!info.technique)return;
+   if(info.isCopy&&info.technique.v27GetoRainbow)return;
+   const spec=selector(info.isCopy?info.source?.characterId:currentId(),info.technique,info.isCopy);
+   if(!spec)return;
+   event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+   collect(spec).then(value=>{
+     if(value===null)return;
+     button.dataset.v365Replay='1';
+     withPrompt(value,()=>button.click());
+     delete button.dataset.v365Replay;
+   });
+ },true);
+}
 function bindUseTechnique(){
  const original=window.useTechnique;
  if(typeof original!=='function'||original.__v365Pretty)return;
@@ -34,7 +65,7 @@ function bindUseTechnique(){
    const t=current()?.techniques?.find(x=>x.key===key),spec=selector(currentId(),t,false);
    if(!spec)return original.apply(this,arguments);
    const context=this,args=arguments;
-   collect(spec).then(value=>{if(value!==null)runWithPrompt(original,context,args,value);});
+   collect(spec).then(value=>{if(value!==null)withPrompt(value,()=>original.apply(context,args));});
  };
  wrapped.__v365Pretty=true;wrapped.__v365Original=original;window.useTechnique=wrapped;
 }
@@ -47,11 +78,11 @@ function bindCopiedTechnique(){
    const spec=selector(src.characterId,src.t,true);
    if(!spec)return original.apply(this,arguments);
    const context=this,args=arguments;
-   collect(spec).then(value=>{if(value!==null)runWithPrompt(original,context,args,value);});
+   collect(spec).then(value=>{if(value!==null)withPrompt(value,()=>original.apply(context,args));});
  };
  wrapped.__v365Pretty=true;wrapped.__v365Original=original;window.executeYutaCopiedTechnique=wrapped;
 }
-function bind(){if(!window.JJKV364||!finalReworkReady())return;bindUseTechnique();bindCopiedTechnique();window.JJKV365={version:VERSION,rebind:bind};}
+function bind(){if(!window.JJKV364||!finalReworkReady())return;installCapture();bindUseTechnique();bindCopiedTechnique();window.JJKV365={version:VERSION,rebind:bind};}
 setTimeout(bind,0);setTimeout(bind,400);setTimeout(bind,1000);setInterval(bind,1200);
-console.info('JJK Energy V36.5 late selector binder loaded');
+console.info('JJK Energy V36.5 late selector binder loaded',VERSION);
 })();
