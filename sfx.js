@@ -114,18 +114,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   });
 })();
 
-/* V38 viene caricata dopo tutti i rework presenti in index.html. Le vecchie fallback V37.1/V37.2 sono disattivate perché sovrascrivevano nuovamente le regole. */
+/* V38 viene caricata dopo tutti i rework presenti in index.html. */
 (function(){
-  function load(){
-    if(document.querySelector('[data-jjk-v38-stability]'))return;
-    const script=document.createElement('script');
-    script.src='v38-stability.js?v=20260726v380';
-    script.defer=true;
-    script.dataset.jjkV38Stability='1';
-    script.onload=()=>console.info('JJK Energy V38 stability loaded');
-    script.onerror=()=>console.error('JJK Energy V38 stability failed to load');
-    document.head.appendChild(script);
+  function loadScript(src,attribute){
+    if(document.querySelector('script['+attribute+']'))return Promise.resolve();
+    return new Promise((resolve,reject)=>{
+      const script=document.createElement('script');script.src=src;script.defer=true;script.setAttribute(attribute,'1');script.onload=resolve;script.onerror=reject;document.head.appendChild(script);
+    });
   }
-  if(document.readyState==='complete')setTimeout(load,1800);
-  else window.addEventListener('load',()=>setTimeout(load,1800),{once:true});
+  async function load(){
+    try{
+      await loadScript('v38-stability.js?v=20260726v380b','data-jjk-v38-stability');
+      await loadScript('v381-final-ui.js?v=20260726v381','data-jjk-v381-final-ui');
+      console.info('JJK Energy V38.1 final UI loaded');
+    }catch(error){console.error('JJK Energy V38.1 final UI failed to load',error);}
+  }
+  if(document.readyState==='complete')setTimeout(load,600);
+  else window.addEventListener('load',()=>setTimeout(load,600),{once:true});
 })();
