@@ -114,16 +114,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   });
 })();
 
-/* V39 e l'unico strato finale: V38 e V38.1 non vengono piu caricati. */
+/* V39.1 e lo strato finale cache-safe. */
 (function(){
   function load(){
-    if(document.querySelector('script[data-jjk-v39-stable]'))return;
+    if(document.querySelector('script[data-jjk-v391-stable]'))return;
     const script=document.createElement('script');
-    script.src='v39-stable.js?v=20260726v390';
+    script.src='v391-stable.js?v=20260726v391a';
     script.defer=true;
-    script.setAttribute('data-jjk-v39-stable','1');
-    script.onload=()=>console.info('JJK Energy V39 stable loaded');
-    script.onerror=()=>console.error('JJK Energy V39 stable failed to load');
+    script.setAttribute('data-jjk-v391-stable','1');
+    script.onload=()=>console.info('JJK Energy V39.1 stable loaded');
+    script.onerror=()=>console.error('JJK Energy V39.1 stable failed to load');
     document.head.appendChild(script);
   }
   if(document.readyState==='complete')setTimeout(load,300);
