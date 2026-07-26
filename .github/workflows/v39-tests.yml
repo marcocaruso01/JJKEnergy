@@ -1,0 +1,22 @@
+name: V39 tests
+
+on:
+  push:
+    branches: [main, agent/v39-stabilita-jogo-itadori]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax check
+        run: node --check v39-stable.js
+      - name: Rule tests
+        run: node tests/v39-rules.test.js
+      - name: Browser smoke test
+        run: node tests/v39-browser-smoke.test.js
