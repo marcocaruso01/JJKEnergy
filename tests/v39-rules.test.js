@@ -1,0 +1,22 @@
+'use strict';
+const assert=require('node:assert/strict');
+const rules=require('../v39-stable.js');
+
+assert.equal(rules.version,'39.0.0');
+assert.deepEqual(rules.resolveVariableCost(16,14,false),{roll:16,paid:14,body:14,missing:2});
+assert.deepEqual(rules.resolveVariableCost(24,0,false),{roll:24,paid:0,body:0,missing:24});
+assert.deepEqual(rules.resolveVariableCost(24,3,true),{roll:24,paid:0,body:24,missing:0});
+assert.deepEqual(rules.analyzeBlackFlashRolls([1,1,4,6]),{ok:true,rolls:[1,1,4,6],sum:12,error:null});
+assert.equal(rules.analyzeBlackFlashRolls([4,3]).ok,false);
+assert.equal(rules.analyzeBlackFlashRolls([0,2]).ok,false);
+assert.deepEqual(rules.itadoriBonuses(0),{body:0,life:0,energy:0});
+assert.deepEqual(rules.itadoriBonuses(8),{body:2,life:1,energy:0});
+assert.deepEqual(rules.itadoriBonuses(20),{body:5,life:4,energy:6});
+const bp=rules.blueprints();
+assert.deepEqual(bp.jogo.grades.map(g=>g.max),[10,12,15,18,20,23]);
+assert.deepEqual(bp.jogo.grades.map(g=>g.exp),[0,7,16,26,35,45]);
+assert.deepEqual(bp.jogo.techniques.map(t=>t.key),['insetti','vulcani','salvataggio_hanami','meteora2','bara_ferro','placche_tettoniche']);
+assert.deepEqual(bp.itadori.grades.map(g=>g.max),[10,12,15,18,20,21]);
+assert.deepEqual(bp.itadori.grades.map(g=>g.exp),[0,9,19,30,42,50]);
+assert.deepEqual(bp.itadori.techniques.map(t=>t.key),['pugno_divergente','black_flash_itadori','manipolazione_sangue','freccia_itadori','richiamo_anima_sukuna','immortalita']);
+console.log('V39 rules tests passed');
