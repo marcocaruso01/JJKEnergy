@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/publish-v37-update.yml'
-      - '.v37/js.*'
+      - '.v37/chunk.*'
   workflow_dispatch:
 
 permissions:
@@ -31,18 +31,26 @@ jobs:
           report = []
           ok = False
           try:
-              chunks = sorted(Path('.v37').glob('js.*'))
+              chunks = sorted(Path('.v37').glob('chunk.*'))
               report.append(f'chunks={len(chunks)}')
-              if not chunks:
-                  raise RuntimeError('No .v37/js.* chunks found')
+              if len(chunks) != 7:
+                  raise RuntimeError(f'Expected 7 V37 chunks, found {len(chunks)}')
+              sizes = [len(p.read_text(encoding='utf-8').strip()) for p in chunks]
+              report.append('chunk_sizes=' + ','.join(map(str, sizes)))
+              if sizes != [3200, 3200, 3200, 3200, 3200, 3200, 660]:
+                  raise RuntimeError(f'Unexpected chunk sizes: {sizes}')
               encoded = ''.join(p.read_text(encoding='utf-8').strip() for p in chunks)
               report.append(f'base64_chars={len(encoded)}')
+              if len(encoded) != 19860:
+                  raise RuntimeError(f'Unexpected base64 length: {len(encoded)}')
               packed = base64.b64decode(encoded, validate=True)
               report.append(f'gzip_bytes={len(packed)}')
               source = gzip.decompress(packed)
               Path('v37-update.js').write_bytes(source)
               report.append(f'js_bytes={len(source)}')
               report.append('sha256=' + hashlib.sha256(source).hexdigest())
+              if len(source) != 53732:
+                  raise RuntimeError(f'Unexpected JavaScript length: {len(source)}')
 
               subprocess.run(['node', '--check', 'v37-update.js'], check=True)
               report.append('syntax=ok')
