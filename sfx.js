@@ -114,21 +114,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   });
 })();
 
-/* V38 viene caricata dopo tutti i rework presenti in index.html. */
+/* V39 e l'unico strato finale: V38 e V38.1 non vengono piu caricati. */
 (function(){
-  function loadScript(src,attribute){
-    if(document.querySelector('script['+attribute+']'))return Promise.resolve();
-    return new Promise((resolve,reject)=>{
-      const script=document.createElement('script');script.src=src;script.defer=true;script.setAttribute(attribute,'1');script.onload=resolve;script.onerror=reject;document.head.appendChild(script);
-    });
+  function load(){
+    if(document.querySelector('script[data-jjk-v39-stable]'))return;
+    const script=document.createElement('script');
+    script.src='v39-stable.js?v=20260726v390';
+    script.defer=true;
+    script.setAttribute('data-jjk-v39-stable','1');
+    script.onload=()=>console.info('JJK Energy V39 stable loaded');
+    script.onerror=()=>console.error('JJK Energy V39 stable failed to load');
+    document.head.appendChild(script);
   }
-  async function load(){
-    try{
-      await loadScript('v38-stability.js?v=20260726v380b','data-jjk-v38-stability');
-      await loadScript('v381-final-ui.js?v=20260726v381','data-jjk-v381-final-ui');
-      console.info('JJK Energy V38.1 final UI loaded');
-    }catch(error){console.error('JJK Energy V38.1 final UI failed to load',error);}
-  }
-  if(document.readyState==='complete')setTimeout(load,600);
-  else window.addEventListener('load',()=>setTimeout(load,600),{once:true});
+  if(document.readyState==='complete')setTimeout(load,300);
+  else window.addEventListener('load',()=>setTimeout(load,300),{once:true});
 })();
