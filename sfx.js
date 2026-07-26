@@ -51,7 +51,7 @@ function classify(button){
   const text=(button.textContent||'').trim().toLowerCase();
   const cls=button.className||'';
   if(button.classList.contains('jjk-audio-toggle'))return 'none';
-  if(button.classList.contains('use-btn')||/utilizza|usa da sola|attiva katana/.test(text))return 'technique';
+  if(button.classList.contains('use-btn')||button.classList.contains('v38-use-btn')||/utilizza|usa da sola|attiva katana/.test(text))return 'technique';
   if(/danger|reset|kick|delete/.test(cls)||/espelli|cancella|elimina|esci dalla stanza|fine partita/.test(text))return 'danger';
   if(/primary|save|victory|confirm|apply/.test(cls)||/salva|conferma|crea stanza|genera codice|partecipa|avvia partita|inizia partita|applica/.test(text))return 'confirm';
   if(/back|arrow|tab|home-action|character-card|room-draft-card|info-character-card|cloud-stats-tab/.test(cls)||text==='←'||text==='→')return 'nav';
@@ -87,7 +87,6 @@ window.JJKSfx={
   getVolume(){return volume;}
 };
 
-/* Predisposizione per una futura libreria di voci autorizzate. Nessuna voce dell'anime è inclusa. */
 const voiceRegistry=new Map();let activeVoice=null;
 window.JJKVoice={
   register(characterId,context,src){if(!characterId||!context||!src)return;voiceRegistry.set(characterId+':'+context,src);},
@@ -101,52 +100,32 @@ window.JJKVoice={
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
 
-/* V36.2: regole corrette per Toji, Copia di Yuta e Dominio di Megumi. */
+/* Correzioni pregresse ancora necessarie. */
 (function(){
-  if(document.querySelector('[data-jjk-v362-rules]'))return;
-  const script=document.createElement('script');
-  script.src='v362-rules-hotfix.js?v=20260724v362';
-  script.defer=true;
-  script.dataset.jjkV362Rules='1';
-  document.head.appendChild(script);
+  const scripts=[
+    ['v362-rules-hotfix.js?v=20260724v362','jjkV362Rules'],
+    ['v363-copy-complete.js?v=20260725v363','jjkV363Copy'],
+    ['v364-pretty-technique-inputs.js?v=20260725v364b','jjkV364Inputs'],
+    ['v365-late-technique-ui.js?v=20260725v365','jjkV365LateUi']
+  ];
+  scripts.forEach(([src,key])=>{
+    if(document.querySelector('[data-'+key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase())+']'))return;
+    const script=document.createElement('script');script.src=src;script.defer=true;script.dataset[key]='1';document.head.appendChild(script);
+  });
 })();
 
-/* V36.3: copia completa delle tecniche speciali. */
+/* V38 viene caricata dopo tutti i rework presenti in index.html. Le vecchie fallback V37.1/V37.2 sono disattivate perché sovrascrivevano nuovamente le regole. */
 (function(){
-  if(document.querySelector('[data-jjk-v363-copy]'))return;
-  const script=document.createElement('script');
-  script.src='v363-copy-complete.js?v=20260725v363';
-  script.defer=true;
-  script.dataset.jjkV363Copy='1';
-  document.head.appendChild(script);
-})();
-
-/* V36.4: finestre grafiche per scelte, numeri e dadi delle tecniche. */
-(function(){
-  if(document.querySelector('[data-jjk-v364-inputs]'))return;
-  const script=document.createElement('script');
-  script.src='v364-pretty-technique-inputs.js?v=20260725v364b';
-  script.defer=true;
-  script.dataset.jjkV364Inputs='1';
-  document.head.appendChild(script);
-})();
-
-/* V36.5: collega i selettori dopo il caricamento del rework finale. */
-(function(){
-  if(document.querySelector('[data-jjk-v365-late-ui]'))return;
-  const script=document.createElement('script');
-  script.src='v365-late-technique-ui.js?v=20260725v365';
-  script.defer=true;
-  script.dataset.jjkV365LateUi='1';
-  document.head.appendChild(script);
-})();
-
-/* V37.1 fallback: corregge Jogo e Itadori anche prima della pubblicazione diretta del bundle. */
-(function(){
-  if(document.querySelector('[data-jjk-v371-bootstrap]'))return;
-  const script=document.createElement('script');
-  script.src='v371-bootstrap.js?v=20260726v371';
-  script.defer=true;
-  script.dataset.jjkV371Bootstrap='1';
-  document.head.appendChild(script);
+  function load(){
+    if(document.querySelector('[data-jjk-v38-stability]'))return;
+    const script=document.createElement('script');
+    script.src='v38-stability.js?v=20260726v380';
+    script.defer=true;
+    script.dataset.jjkV38Stability='1';
+    script.onload=()=>console.info('JJK Energy V38 stability loaded');
+    script.onerror=()=>console.error('JJK Energy V38 stability failed to load');
+    document.head.appendChild(script);
+  }
+  if(document.readyState==='complete')setTimeout(load,1800);
+  else window.addEventListener('load',()=>setTimeout(load,1800),{once:true});
 })();
