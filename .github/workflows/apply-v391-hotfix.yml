@@ -1,4 +1,4 @@
-name: Apply V39.1 hotfix
+name: Apply V39.3 stability hotfix
 
 on:
   push:
@@ -17,30 +17,25 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Load V39.1 and invalidate browser cache
+      - name: Activate V39.3 and invalidate browser cache
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
-          sfx = Path('sfx.js')
-          text = sfx.read_text(encoding='utf-8')
-          text = text.replace("/* V39 e l'unico strato finale: V38 e V38.1 non vengono piu caricati. */", "/* V39.1 e lo strato finale cache-safe. */")
-          text = text.replace("script[data-jjk-v39-stable]", "script[data-jjk-v391-stable]")
-          text = text.replace("v39-stable.js?v=20260726v390", "v391-stable.js?v=20260726v391a")
-          text = text.replace("data-jjk-v39-stable", "data-jjk-v391-stable")
-          text = text.replace("JJK Energy V39 stable loaded", "JJK Energy V39.1 stable loaded")
-          text = text.replace("JJK Energy V39 stable failed to load", "JJK Energy V39.1 stable failed to load")
-          sfx.write_text(text, encoding='utf-8')
+          import re
 
           index = Path('index.html')
           html = index.read_text(encoding='utf-8')
-          html = html.replace("sfx.js?v=20260725s366", "sfx.js?v=20260726s391a")
+          html, count = re.subn(r'sfx\.js\?v=[^"\']+', 'sfx.js?v=20260726s393a', html)
+          if count == 0:
+              raise SystemExit('sfx.js reference not found in index.html')
           index.write_text(html, encoding='utf-8')
           PY
-          node --check v391-stable.js
-          grep -q "v391-stable.js?v=20260726v391a" sfx.js
-          grep -q "sfx.js?v=20260726s391a" index.html
-      - name: Commit generated hotfix
+          node --check v392-gameplay.js
+          node --check v393-stability.js
+          node --check sfx.js
+          grep -q "v393-stability.js?v=20260726v393a" sfx.js
+          grep -q "sfx.js?v=20260726s393a" index.html
+      - name: Commit generated cache update
         run: |
           if git diff --quiet; then
             echo "No changes needed"
@@ -48,6 +43,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add sfx.js index.html
-          git commit -m "fix(v39.1): force corrected runtime in browsers"
+          git add index.html
+          git commit -m "fix(v39.3): activate stable resource UI and exact technique mapping"
           git push origin main
