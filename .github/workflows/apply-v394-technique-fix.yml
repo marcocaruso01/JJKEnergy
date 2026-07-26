@@ -1,0 +1,121 @@
+name: Apply V39.4 technique fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-v394-technique-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Replace fragile technique dispatch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          gameplay = Path('v392-gameplay.js')
+          text = gameplay.read_text(encoding='utf-8')
+          text = text.replace('JJK Energy V39.2 - authoritative gameplay rules and stable technique dispatch', 'JJK Energy V39.4 - authoritative gameplay rules and exact button dispatch')
+          text = text.replace("const VERSION='39.2.0';", "const VERSION='39.4.0';")
+
+          decorate = r'''function decorateTechniqueCards(){
+            const grid=document.getElementById('techGrid');if(!grid||!current())return;
+            const available=(current().techniques||[]).filter(t=>{const f=getfn('techniqueIsAvailable');return f?f(t):(RANK[t.grade]??0)<=(RANK[grade()]??0);});
+            [...grid.querySelectorAll(':scope > .tech-card')].forEach((card,i)=>{
+              const t=available[i],button=card.querySelector('.use-btn'),cost=card.querySelector('.tech-cost');if(!t||!button)return;
+              const key=t.key;card.dataset.techKey=key;button.dataset.techKey=key;button.type='button';button.setAttribute('aria-label','Usa '+t.name);
+              button.onclick=event=>{event.preventDefault();event.stopPropagation();getfn('useTechnique')?.(key);};
+              if(!cost)return;
+              if(cid()==='jogo'&&key==='vulcani')cost.innerHTML='Costo: 8 EM · +6 Corpo<span class="v392-tech-note">Vulcani '+jogoVolcanoes()+'/3</span>';
+              if(cid()==='jogo'&&key==='meteora2'){const next=Math.min(8,clamp(read('jogoHeat',0),0,8)+1);cost.innerHTML='Costo: 12 EM · +9 Corpo<span class="v392-tech-note">Prossimo Calore: +'+next+' · solo questa tecnica</span>';}
+              if(cid()==='jogo'&&key==='bara_ferro')cost.innerHTML='Costo: 18 EM · +15 Corpo<span class="v392-tech-note">Bonus Vulcani +'+Math.min(3,jogoVolcanoes())+' · crea 1 Cratere</span>';
+              if(cid()==='itadori'&&key==='black_flash_itadori')cost.innerHTML='Costo: somma dei dadi validi<span class="v392-tech-note">Sequenza non decrescente</span>';
+              if(cid()==='itadori'&&key==='richiamo_anima_sukuna')cost.innerHTML='Costo: risultato d24<span class="v392-tech-note">Corpo: d24 limitato dall’EM + 2d6</span>';
+            });
+          }
+          function decorate(){'''
+          text, count = re.subn(r"function decorateTechniqueCards\(\)\{.*?\nfunction decorate\(\)\{", decorate, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('decorateTechniqueCards replacement failed')
+
+          events = r'''function installEvents(){
+            if(document.documentElement.dataset.v392Events==='1')return;
+            document.documentElement.dataset.v392Events='1';
+            document.addEventListener('click',event=>{
+              if(event.target.closest('[data-v392-monster]'))return awardFingers(1,'Mostro abbattuto',true);
+              if(event.target.closest('[data-v392-sukuna]'))return awardFingers(5,'Sukuna sconfitto');
+              if(event.target.closest('[data-v392-stolen]'))return awardFingers(1,'Dito rubato');
+              if(event.target.closest('[data-v392-correct]'))return correctFinger();
+            });
+          }
+          function patchRoomState(){'''
+          text, count = re.subn(r"function installEvents\(\)\{.*?\nfunction patchRoomState\(\)\{", events, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('installEvents replacement failed')
+
+          install = r'''function install(){
+            if(root.__JJK_V392_INSTALLED__)return;root.__JJK_V392_INSTALLED__=true;
+            const start=()=>{
+              bind();
+              setTimeout(bind,100);
+              setTimeout(()=>{bind();getfn('renderAll')?.();decorate();audit();},500);
+              setTimeout(()=>{patchTechniqueFunction();patchCoreFunctions();patchRoomState();decorateTechniqueCards();},1500);
+              const grid=document.getElementById('techGrid');
+              if(grid&&grid.dataset.v394Observed!=='1'){
+                grid.dataset.v394Observed='1';
+                const observer=new MutationObserver(()=>{clearTimeout(observer._t);observer._t=setTimeout(decorateTechniqueCards,0);});
+                observer.observe(grid,{childList:true,subtree:true});
+              }
+            };
+            document.readyState==='loading'?document.addEventListener('DOMContentLoaded',start,{once:true}):start();
+          }
+          return{version:'''
+          text, count = re.subn(r"function install\(\)\{.*?\nreturn\{version:", install, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('install replacement failed')
+
+          gameplay.write_text(text, encoding='utf-8')
+
+          sfx = Path('sfx.js')
+          loader = sfx.read_text(encoding='utf-8')
+          loader = loader.replace("  ['v365-late-technique-ui.js?v=20260725v365','jjk-v365-ui'],\n", '')
+          loader = loader.replace("  ['v392-gameplay.js?v=20260726v392b','jjk-v392-gameplay'],\n  ['v393-stability.js?v=20260726v393a','jjk-v393-stability']", "  ['v392-gameplay.js?v=20260726v394c','jjk-v394-gameplay']")
+          sfx.write_text(loader, encoding='utf-8')
+
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          html = html.replace('sfx.js?v=20260726s393a', 'sfx.js?v=20260726s394c')
+          index.write_text(html, encoding='utf-8')
+          PY
+
+          node --check v392-gameplay.js
+          grep -q "const VERSION='39.4.0'" v392-gameplay.js
+          grep -q "button.dataset.techKey=key" v392-gameplay.js
+          ! grep -q "const use=e.target.closest('.use-btn')" v392-gameplay.js
+          ! grep -q "v365-late-technique-ui" sfx.js
+          ! grep -q "v393-stability" sfx.js
+          grep -q "v392-gameplay.js?v=20260726v394c" sfx.js
+          grep -q "sfx.js?v=20260726s394c" index.html
+
+      - name: Commit structural fix
+        run: |
+          if git diff --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v392-gameplay.js sfx.js index.html
+          git commit -m "fix(v39.4): bind every card to its exact technique"
+          git push origin main
