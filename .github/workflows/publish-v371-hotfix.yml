@@ -105,3 +105,5 @@ jobs:
           fi
           git commit -m 'fix(v37.1): correct Jogo heat terrain UI and Itadori sheet'
           git push origin HEAD:main
+
+# retrigger: 2026-07-26
