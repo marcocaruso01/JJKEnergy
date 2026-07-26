@@ -20,10 +20,36 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Assemble V37 JavaScript
+      - name: Assemble V37 JavaScript with diagnostics
         run: |
-          cat .v37/js.* | base64 --decode | gzip --decompress > v37-update.js
-          test -s v37-update.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib, traceback
+
+          report = []
+          try:
+              chunks = sorted(Path('.v37').glob('js.*'))
+              report.append(f'chunks={len(chunks)}')
+              if not chunks:
+                  raise RuntimeError('No .v37/js.* chunks found')
+              encoded = ''.join(p.read_text(encoding='utf-8').strip() for p in chunks)
+              report.append(f'base64_chars={len(encoded)}')
+              packed = base64.b64decode(encoded, validate=True)
+              report.append(f'gzip_bytes={len(packed)}')
+              source = gzip.decompress(packed)
+              Path('v37-update.js').write_bytes(source)
+              report.append(f'js_bytes={len(source)}')
+              report.append('sha256=' + hashlib.sha256(source).hexdigest())
+              report.append('assembly=ok')
+          except Exception:
+              report.append('assembly=failed')
+              report.append(traceback.format_exc())
+              Path('v37-build-report.txt').write_text('\n'.join(report), encoding='utf-8')
+              raise
+
+          Path('v37-build-report.txt').write_text('\n'.join(report), encoding='utf-8')
+          print('\n'.join(report))
+          PY
 
       - name: Verify JavaScript syntax
         run: node --check v37-update.js
@@ -40,8 +66,10 @@ jobs:
           assert.deepStrictEqual(v37.itadoriFingerBonuses(12), {body:3, life:2, energy:2});
           assert.deepStrictEqual(v37.itadoriFingerBonuses(20), {body:5, life:4, energy:6});
 
-          const capped = v37.resolveVariableCost(16, 14, 16, false);
-          assert.deepStrictEqual(capped, {roll:16, paid:14, missing:2, body:14, effectiveCost:16});
+          assert.deepStrictEqual(
+            v37.resolveVariableCost(16, 14, 16, false),
+            {roll:16, paid:14, missing:2, body:14, effectiveCost:16}
+          );
           assert.strictEqual(v37.resolveVariableCost(8, 14, 8, false).body, 8);
           assert.strictEqual(v37.resolveVariableCost(16, 14, 16, true).body, 16);
 
@@ -64,13 +92,13 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path('index.html')
           text = path.read_text(encoding='utf-8')
           loader = '<script src="v37-update.js?v=20260726v370"></script>'
           anchor = '<script src="v366-technique-ui.js?v=20260725v366"></script>'
 
-          import re
           text = re.sub(r'\n?<script src="v37-update\.js\?v=[^"]+"></script>', '', text)
           if anchor not in text:
               raise SystemExit('V36.6 loader anchor not found')
@@ -92,12 +120,12 @@ jobs:
 
       - name: Commit V37 to main
         run: |
-          if git diff --quiet -- index.html v37-update.js; then
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html v37-update.js v37-build-report.txt
+          if git diff --cached --quiet; then
             echo 'No V37 changes required'
             exit 0
           fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html v37-update.js
           git commit -m 'feat(v37): update Jogo Itadori dice rules and opponent sheets'
           git push origin HEAD:main
