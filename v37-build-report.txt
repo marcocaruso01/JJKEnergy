@@ -1,0 +1,11 @@
+chunks=1
+base64_chars=4000
+gzip_bytes=3000
+verification=failed
+Traceback (most recent call last):
+  File "<stdin>", line 15, in <module>
+  File "/usr/lib/python3.12/gzip.py", line 634, in decompress
+    raise EOFError("Compressed file ended before the end-of-stream "
+EOFError: Compressed file ended before the end-of-stream marker was reached
+
+verification=failed
