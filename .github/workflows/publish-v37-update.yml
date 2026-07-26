@@ -1,0 +1,103 @@
+name: Publish V37 Gameplay Update
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-v37-update.yml'
+      - '.v37/js.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-v37:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Assemble V37 JavaScript
+        run: |
+          cat .v37/js.* | base64 --decode | gzip --decompress > v37-update.js
+          test -s v37-update.js
+
+      - name: Verify JavaScript syntax
+        run: node --check v37-update.js
+
+      - name: Run V37 rules tests
+        run: |
+          node <<'NODE'
+          const assert = require('assert');
+          const v37 = require('./v37-update.js');
+
+          assert.deepStrictEqual(v37.itadoriFingerBonuses(0), {body:0, life:0, energy:0});
+          assert.deepStrictEqual(v37.itadoriFingerBonuses(4), {body:1, life:0, energy:0});
+          assert.deepStrictEqual(v37.itadoriFingerBonuses(8), {body:2, life:1, energy:0});
+          assert.deepStrictEqual(v37.itadoriFingerBonuses(12), {body:3, life:2, energy:2});
+          assert.deepStrictEqual(v37.itadoriFingerBonuses(20), {body:5, life:4, energy:6});
+
+          const capped = v37.resolveVariableCost(16, 14, 16, false);
+          assert.deepStrictEqual(capped, {roll:16, paid:14, missing:2, body:14, effectiveCost:16});
+          assert.strictEqual(v37.resolveVariableCost(8, 14, 8, false).body, 8);
+          assert.strictEqual(v37.resolveVariableCost(16, 14, 16, true).body, 16);
+
+          const bp = v37.blueprints();
+          assert.strictEqual(bp.jogo.maxLife, 8);
+          assert.strictEqual(bp.jogo.baseBody, 5);
+          assert.strictEqual(bp.jogo.techniques.find(t => t.key === 'vulcani').bonus, 6);
+          assert.strictEqual(bp.jogo.grades.find(g => g.id === 'SG').max, 23);
+          assert.strictEqual(bp.itadori.maxLife, 4);
+          assert.strictEqual(bp.itadori.baseBody, 4);
+          assert.strictEqual(bp.itadori.grades.find(g => g.id === 'SG').max, 21);
+          assert.strictEqual(bp.itadori.techniques.find(t => t.key === 'black_flash_itadori').grade, 'G3');
+          assert.ok(bp.itadori.techniques.some(t => t.v37ItadoriSoulDomain));
+          assert.ok(bp.itadori.techniques.some(t => t.v37ItadoriImmortality));
+
+          console.log('V37 rules tests passed');
+          NODE
+
+      - name: Patch main loader
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          loader = '<script src="v37-update.js?v=20260726v370"></script>'
+          anchor = '<script src="v366-technique-ui.js?v=20260725v366"></script>'
+
+          import re
+          text = re.sub(r'\n?<script src="v37-update\.js\?v=[^"]+"></script>', '', text)
+          if anchor not in text:
+              raise SystemExit('V36.6 loader anchor not found')
+          text = text.replace(anchor, anchor + '\n' + loader)
+          path.write_text(text, encoding='utf-8')
+
+          assert loader in text
+          assert text.index(loader) > text.index('rework-v27.js?v=20260721v27')
+          assert text.index(loader) > text.index(anchor)
+          print('V37 loader patched and verified')
+          PY
+
+      - name: Verify published files
+        run: |
+          grep -F 'v37-update.js?v=20260726v370' index.html
+          grep -F "const VERSION='37.0.0'" v37-update.js
+          grep -F "v37ItadoriImmortality" v37-update.js
+          grep -F "resolveVariableCost" v37-update.js
+
+      - name: Commit V37 to main
+        run: |
+          if git diff --quiet -- index.html v37-update.js; then
+            echo 'No V37 changes required'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html v37-update.js
+          git commit -m 'feat(v37): update Jogo Itadori dice rules and opponent sheets'
+          git push origin HEAD:main
