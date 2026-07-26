@@ -1,0 +1,107 @@
+name: Publish V37.1 Jogo Itadori Hotfix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-v371-hotfix.yml'
+      - '.v371/payload.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-v371:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Assemble V37.1
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib
+
+          chunks = sorted(Path('.v371').glob('payload.*'))
+          if len(chunks) != 4:
+              raise SystemExit(f'Expected 4 payload chunks, found {len(chunks)}')
+          encoded = ''.join(p.read_text(encoding='utf-8').strip() for p in chunks)
+          source = gzip.decompress(base64.b64decode(encoded, validate=True))
+          Path('v371-jogo-itadori-fixes.js').write_bytes(source)
+          report = [
+              f'chunks={len(chunks)}',
+              'chunk_sizes=' + ','.join(str(len(p.read_text(encoding="utf-8").strip())) for p in chunks),
+              f'base64_chars={len(encoded)}',
+              f'js_bytes={len(source)}',
+              'sha256=' + hashlib.sha256(source).hexdigest()
+          ]
+          Path('v371-build-report.txt').write_text('\n'.join(report) + '\n', encoding='utf-8')
+          print('\n'.join(report))
+          PY
+
+      - name: Verify syntax and rules
+        run: |
+          node --check v371-jogo-itadori-fixes.js
+          node <<'NODE'
+          const assert = require('assert');
+          const v = require('./v371-jogo-itadori-fixes.js');
+          assert.strictEqual(v.version, '37.1.0');
+          assert.strictEqual(v.jogoTechniqueTotal('insetti', {baseBody:5, combatBonus:0, heat:8}), 9);
+          assert.strictEqual(v.jogoTechniqueTotal('vulcani', {baseBody:5, combatBonus:0, heat:8}), 11);
+          assert.strictEqual(v.jogoTechniqueTotal('meteora2', {baseBody:5, combatBonus:0, heat:8}), 22);
+          assert.strictEqual(v.jogoTechniqueTotal('bara_ferro', {baseBody:5, combatBonus:0, volcanoes:10, heat:8}), 23);
+          assert.deepStrictEqual(v.absorbCraterState(2,23), {ok:true, craters:1, energy:33});
+          assert.deepStrictEqual(v.absorbCraterState(0,23), {ok:false, craters:0, energy:23});
+          const i = v.itadoriBlueprint();
+          assert.strictEqual(i.maxLife,4);
+          assert.strictEqual(i.baseBody,4);
+          assert.strictEqual(i.coins,1);
+          assert.deepStrictEqual(i.grades.map(g=>g.exp), [0,9,19,30,42,50]);
+          assert.deepStrictEqual(i.grades.map(g=>g.max), [10,12,15,18,20,21]);
+          assert.deepStrictEqual(i.techniques.map(t=>t.grade), ['G4','G3','G2','G1','SS','SG']);
+          console.log('rules=ok');
+          NODE
+          printf 'syntax=ok\nrules=ok\nverification=ok\n' >> v371-build-report.txt
+
+      - name: Patch loader
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          anchor = '<script src="v37-update.js?v=20260726v372"></script>'
+          loader = '<script src="v371-jogo-itadori-fixes.js?v=20260726v371"></script>'
+          text = re.sub(r'\n?<script src="v371-jogo-itadori-fixes\.js\?v=[^"]+"></script>', '', text)
+          if anchor not in text:
+              raise SystemExit('V37 loader anchor not found')
+          text = text.replace(anchor, anchor + '\n' + loader)
+          path.write_text(text, encoding='utf-8')
+          assert loader in text
+          assert text.index(loader) > text.index(anchor)
+          print('V37.1 loader patched after V37')
+          PY
+
+      - name: Verify published content
+        run: |
+          grep -F "const VERSION='37.1.0'" v371-jogo-itadori-fixes.js
+          grep -F "jogoTechniqueTotal" v371-jogo-itadori-fixes.js
+          grep -F "absorbCraterState" v371-jogo-itadori-fixes.js
+          grep -F "v371-jogo-itadori-fixes.js?v=20260726v371" index.html
+
+      - name: Commit V37.1 to main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html v371-jogo-itadori-fixes.js v371-build-report.txt
+          if git diff --cached --quiet; then
+            echo 'No V37.1 changes required'
+            exit 0
+          fi
+          git commit -m 'fix(v37.1): correct Jogo heat terrain UI and Itadori sheet'
+          git push origin HEAD:main
