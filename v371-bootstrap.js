@@ -1,4 +1,4 @@
-/* JJK Energy V37.1 fallback loader + V37.2 GM audit */
+/* JJK Energy V37.1 fallback loader + V37.2 GM audit + V38 stability */
 (function(){
 'use strict';
 if(window.__JJK_V371_BOOTSTRAP__)return;
@@ -10,15 +10,28 @@ async function gunzip(bytes){
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
   return new TextDecoder().decode(await new Response(stream).arrayBuffer());
 }
-function loadV372(){
-  if(document.querySelector('[data-jjk-v372-gm-audit]'))return;
-  const script=document.createElement('script');
-  script.src='v372-gm-controls-audit.js?v=20260726v372';
-  script.defer=true;
-  script.dataset.jjkV372GmAudit='1';
-  script.onload=()=>console.info('JJK Energy V37.2 GM audit loaded');
-  script.onerror=()=>console.error('JJK Energy V37.2 GM audit failed to load');
-  document.head.appendChild(script);
+function loadScript(src,datasetKey,datasetValue){
+  if(document.querySelector('script['+datasetKey+']'))return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src=src;
+    script.defer=true;
+    script.setAttribute(datasetKey,datasetValue);
+    script.onload=resolve;
+    script.onerror=()=>reject(new Error('Caricamento fallito: '+src));
+    document.head.appendChild(script);
+  });
+}
+async function loadFinalLayers(){
+  try{
+    await loadScript('v372-gm-controls-audit.js?v=20260726v372b','data-jjk-v372-gm-audit','1');
+    await loadScript('v38-stability.js?v=20260726v380','data-jjk-v38-stability','1');
+    window.JJKFinalLayers={loaded:true,v372:!!window.JJKV372,v38:!!window.JJKV38};
+    console.info('JJK Energy final stability layers loaded',window.JJKFinalLayers);
+  }catch(error){
+    window.JJKFinalLayers={loaded:false,error:String(error?.message||error)};
+    console.error('JJK Energy final stability layers failed',error);
+  }
 }
 async function load(){
   try{
@@ -32,7 +45,7 @@ async function load(){
     window.JJKV371Bootstrap={loaded:false,error:String(error?.message||error)};
     console.error('JJK Energy V37.1 fallback failed',error);
   }finally{
-    loadV372();
+    await loadFinalLayers();
   }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(load,700),{once:true});else setTimeout(load,700);
