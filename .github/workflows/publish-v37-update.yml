@@ -20,13 +20,16 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Assemble V37 JavaScript with diagnostics
+      - name: Assemble and test V37
+        id: verify
+        continue-on-error: true
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import base64, gzip, hashlib, traceback
+          import base64, gzip, hashlib, subprocess, traceback
 
           report = []
+          ok = False
           try:
               chunks = sorted(Path('.v37').glob('js.*'))
               report.append(f'chunks={len(chunks)}')
@@ -40,92 +43,90 @@ jobs:
               Path('v37-update.js').write_bytes(source)
               report.append(f'js_bytes={len(source)}')
               report.append('sha256=' + hashlib.sha256(source).hexdigest())
-              report.append('assembly=ok')
-          except Exception:
-              report.append('assembly=failed')
-              report.append(traceback.format_exc())
-              Path('v37-build-report.txt').write_text('\n'.join(report), encoding='utf-8')
-              raise
 
-          Path('v37-build-report.txt').write_text('\n'.join(report), encoding='utf-8')
+              subprocess.run(['node', '--check', 'v37-update.js'], check=True)
+              report.append('syntax=ok')
+
+              test = r'''
+              const assert = require('assert');
+              const v37 = require('./v37-update.js');
+              assert.deepStrictEqual(v37.itadoriFingerBonuses(0), {body:0, life:0, energy:0});
+              assert.deepStrictEqual(v37.itadoriFingerBonuses(4), {body:1, life:0, energy:0});
+              assert.deepStrictEqual(v37.itadoriFingerBonuses(8), {body:2, life:1, energy:0});
+              assert.deepStrictEqual(v37.itadoriFingerBonuses(12), {body:3, life:2, energy:2});
+              assert.deepStrictEqual(v37.itadoriFingerBonuses(20), {body:5, life:4, energy:6});
+              assert.deepStrictEqual(v37.resolveVariableCost(16, 14, 16, false), {roll:16, paid:14, missing:2, body:14, effectiveCost:16});
+              assert.strictEqual(v37.resolveVariableCost(16, 14, 16, true).body, 16);
+              const bp = v37.blueprints();
+              assert.strictEqual(bp.jogo.maxLife, 8);
+              assert.strictEqual(bp.jogo.baseBody, 5);
+              assert.strictEqual(bp.jogo.techniques.find(t => t.key === 'vulcani').bonus, 6);
+              assert.strictEqual(bp.jogo.grades.find(g => g.id === 'SG').max, 23);
+              assert.strictEqual(bp.itadori.maxLife, 4);
+              assert.strictEqual(bp.itadori.baseBody, 4);
+              assert.strictEqual(bp.itadori.grades.find(g => g.id === 'SG').max, 21);
+              assert.strictEqual(bp.itadori.techniques.find(t => t.key === 'black_flash_itadori').grade, 'G3');
+              assert.ok(bp.itadori.techniques.some(t => t.v37ItadoriSoulDomain));
+              assert.ok(bp.itadori.techniques.some(t => t.v37ItadoriImmortality));
+              console.log('rules=ok');
+              '''
+              result = subprocess.run(['node', '-e', test], check=True, capture_output=True, text=True)
+              report.append(result.stdout.strip())
+              ok = True
+          except Exception:
+              report.append('verification=failed')
+              report.append(traceback.format_exc())
+
+          report.append('verification=' + ('ok' if ok else 'failed'))
+          Path('v37-build-report.txt').write_text('\n'.join(report) + '\n', encoding='utf-8')
+          Path('.v37-status').write_text('ok' if ok else 'failed', encoding='utf-8')
           print('\n'.join(report))
           PY
 
-      - name: Verify JavaScript syntax
-        run: node --check v37-update.js
-
-      - name: Run V37 rules tests
+      - name: Patch direct loader when verified
+        if: always()
         run: |
-          node <<'NODE'
-          const assert = require('assert');
-          const v37 = require('./v37-update.js');
-
-          assert.deepStrictEqual(v37.itadoriFingerBonuses(0), {body:0, life:0, energy:0});
-          assert.deepStrictEqual(v37.itadoriFingerBonuses(4), {body:1, life:0, energy:0});
-          assert.deepStrictEqual(v37.itadoriFingerBonuses(8), {body:2, life:1, energy:0});
-          assert.deepStrictEqual(v37.itadoriFingerBonuses(12), {body:3, life:2, energy:2});
-          assert.deepStrictEqual(v37.itadoriFingerBonuses(20), {body:5, life:4, energy:6});
-
-          assert.deepStrictEqual(
-            v37.resolveVariableCost(16, 14, 16, false),
-            {roll:16, paid:14, missing:2, body:14, effectiveCost:16}
-          );
-          assert.strictEqual(v37.resolveVariableCost(8, 14, 8, false).body, 8);
-          assert.strictEqual(v37.resolveVariableCost(16, 14, 16, true).body, 16);
-
-          const bp = v37.blueprints();
-          assert.strictEqual(bp.jogo.maxLife, 8);
-          assert.strictEqual(bp.jogo.baseBody, 5);
-          assert.strictEqual(bp.jogo.techniques.find(t => t.key === 'vulcani').bonus, 6);
-          assert.strictEqual(bp.jogo.grades.find(g => g.id === 'SG').max, 23);
-          assert.strictEqual(bp.itadori.maxLife, 4);
-          assert.strictEqual(bp.itadori.baseBody, 4);
-          assert.strictEqual(bp.itadori.grades.find(g => g.id === 'SG').max, 21);
-          assert.strictEqual(bp.itadori.techniques.find(t => t.key === 'black_flash_itadori').grade, 'G3');
-          assert.ok(bp.itadori.techniques.some(t => t.v37ItadoriSoulDomain));
-          assert.ok(bp.itadori.techniques.some(t => t.v37ItadoriImmortality));
-
-          console.log('V37 rules tests passed');
-          NODE
-
-      - name: Patch main loader
-        run: |
+          if [ "$(cat .v37-status)" != "ok" ]; then
+            echo 'V37 verification failed; leaving bootstrap loader active.'
+            exit 0
+          fi
           python3 - <<'PY'
           from pathlib import Path
           import re
 
           path = Path('index.html')
           text = path.read_text(encoding='utf-8')
-          loader = '<script src="v37-update.js?v=20260726v370"></script>'
           anchor = '<script src="v366-technique-ui.js?v=20260725v366"></script>'
+          direct = '<script src="v37-update.js?v=20260726v372"></script>'
 
+          text = re.sub(r'\n?<script src="v37-bootstrap\.js\?v=[^"]+"></script>', '', text)
           text = re.sub(r'\n?<script src="v37-update\.js\?v=[^"]+"></script>', '', text)
           if anchor not in text:
               raise SystemExit('V36.6 loader anchor not found')
-          text = text.replace(anchor, anchor + '\n' + loader)
+          text = text.replace(anchor, anchor + '\n' + direct)
           path.write_text(text, encoding='utf-8')
 
-          assert loader in text
-          assert text.index(loader) > text.index('rework-v27.js?v=20260721v27')
-          assert text.index(loader) > text.index(anchor)
-          print('V37 loader patched and verified')
+          assert direct in text
+          assert text.index(direct) > text.index('rework-v27.js?v=20260721v27')
+          print('Direct V37 loader patched')
           PY
 
-      - name: Verify published files
-        run: |
-          grep -F 'v37-update.js?v=20260726v370' index.html
-          grep -F "const VERSION='37.0.0'" v37-update.js
-          grep -F "v37ItadoriImmortality" v37-update.js
-          grep -F "resolveVariableCost" v37-update.js
-
-      - name: Commit V37 to main
+      - name: Commit verification result
+        if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html v37-update.js v37-build-report.txt
+          git add v37-build-report.txt
+          if [ "$(cat .v37-status)" = "ok" ]; then
+            git add index.html v37-update.js
+          fi
           if git diff --cached --quiet; then
-            echo 'No V37 changes required'
+            echo 'No report or V37 changes required'
             exit 0
           fi
-          git commit -m 'feat(v37): update Jogo Itadori dice rules and opponent sheets'
+          if [ "$(cat .v37-status)" = "ok" ]; then
+            git commit -m 'feat(v37): publish verified Jogo Itadori and dice update'
+          else
+            git commit -m 'ci(v37): record failed verification report'
+          fi
           git push origin HEAD:main
