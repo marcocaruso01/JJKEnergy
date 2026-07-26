@@ -140,3 +140,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   script.dataset.jjkV365LateUi='1';
   document.head.appendChild(script);
 })();
+
+/* V37.1 fallback: corregge Jogo e Itadori anche prima della pubblicazione diretta del bundle. */
+(function(){
+  if(document.querySelector('[data-jjk-v371-bootstrap]'))return;
+  const script=document.createElement('script');
+  script.src='v371-bootstrap.js?v=20260726v371';
+  script.defer=true;
+  script.dataset.jjkV371Bootstrap='1';
+  document.head.appendChild(script);
+})();
