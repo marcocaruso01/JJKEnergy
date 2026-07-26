@@ -1,0 +1,58 @@
+name: Patch V37 Bootstrap Loader
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-v37-bootstrap-loader.yml'
+      - 'v37-bootstrap.js'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-loader:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify bootstrap syntax
+        run: node --check v37-bootstrap.js
+
+      - name: Patch index loader
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          anchor = '<script src="v366-technique-ui.js?v=20260725v366"></script>'
+          loader = '<script src="v37-bootstrap.js?v=20260726v371"></script>'
+
+          text = re.sub(r'\n?<script src="v37-bootstrap\.js\?v=[^"]+"></script>', '', text)
+          if anchor not in text:
+              raise SystemExit('V36.6 anchor not found')
+          text = text.replace(anchor, anchor + '\n' + loader)
+          path.write_text(text, encoding='utf-8')
+
+          assert loader in text
+          assert text.index(loader) > text.index('rework-v27.js?v=20260721v27')
+          print('V37 bootstrap loader patched')
+          PY
+
+      - name: Commit loader to main
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'Loader already current'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat(v37): load verified gameplay bootstrap'
+          git push origin HEAD:main
