@@ -41,7 +41,8 @@ function boot(){installAudio();[
  ['v362-rules-hotfix.js?v=20260724v362','jjk-v362-rules'],
  ['v363-copy-complete.js?v=20260725v363','jjk-v363-copy'],
  ['v364-pretty-technique-inputs.js?v=20260725v364b','jjk-v364-inputs'],
- ['v394-technique-fix.js?v=20260727v395a','jjk-v395-technique-fix'],
+ ['v394-technique-fix.js?v=20260727v397a','jjk-v397-technique-fix'],
+ ['v397-runtime-guards.js?v=20260727v397a','jjk-v397-runtime-guards'],
  ['v392-gameplay.js?v=20260726v392b','jjk-v392-gameplay'],
  ['v396-jogo-ui-cleanup.js?v=20260727v396a','jjk-v396-jogo-ui']
 ].forEach(([src,key])=>loadScript(src,key));}
