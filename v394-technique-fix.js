@@ -1,25 +1,30 @@
-/* JJK Energy V39.5 - exact technique identity, never positional */
+/* JJK Energy V39.7 - exact technique identity, never positional */
 (function(root){
 'use strict';
 if(root.__JJK_V395_TECHNIQUE_FIX__)return;
 root.__JJK_V395_TECHNIQUE_FIX__=true;
+root.__JJK_V397_TECHNIQUE_FIX__=true;
 
 /* Prevent the older capture/replay systems from being installed. */
 document.documentElement.dataset.v392Events='1';
 document.documentElement.dataset.v365Capture='1';
 root.__JJK_V393_INSTALLED__=true;
 
-const VERSION='39.5.0';
+const VERSION='39.7.0';
 function read(name,fallback=null){try{const value=(0,eval)(name);return value===undefined?fallback:value;}catch(_){return root[name]===undefined?fallback:root[name];}}
 function getfn(name){const value=read(name,root[name]);return typeof value==='function'?value:null;}
-function setfn(name,value){root[name]=value;root.__v395fn=value;try{(0,eval)(name+'=globalThis.__v395fn');}catch(_){}delete root.__v395fn;}
+function setfn(name,value){root[name]=value;root.__v397fn=value;try{(0,eval)(name+'=globalThis.__v397fn');}catch(_){}delete root.__v397fn;}
 function current(){return read('current',null);}
 function currentId(){return read('currentId',null);}
 function normalize(value){return String(value||'').replace(/\s+/g,' ').trim();}
+function isUtilityCard(card){
+  const label=normalize(card?.querySelector('.tech-name')?.textContent).toLowerCase();
+  return !!card&&(card.classList.contains('v25-body-card')||label==='corpo'||card.dataset.utilityCard==='1');
+}
 
 function techniqueForCard(card){
   const character=current();
-  if(!card||!character)return null;
+  if(!card||!character||isUtilityCard(card))return null;
   const label=normalize(card.querySelector('.tech-name')?.textContent);
   const techniques=Array.isArray(character.techniques)?character.techniques:[];
 
@@ -46,6 +51,11 @@ function techniqueForCard(card){
   return null;
 }
 
+function clearStaleIdentity(card,button){
+  if(card)delete card.dataset.techKey;
+  if(button)delete button.dataset.techKey;
+}
+
 function bindButtons(){
   const grid=document.getElementById('techGrid');
   const character=current();
@@ -54,13 +64,21 @@ function bindButtons(){
 
   [...grid.querySelectorAll(':scope > .tech-card')].forEach(card=>{
     const button=card.querySelector('.use-btn');
+    if(isUtilityCard(card)){
+      clearStaleIdentity(card,button);
+      card.dataset.utilityCard='1';
+      return;
+    }
+
     const technique=techniqueForCard(card);
     if(!button||!technique){
+      clearStaleIdentity(card,button);
       audit.push({label:normalize(card.querySelector('.tech-name')?.textContent),key:null,ok:false});
       return;
     }
 
     const key=String(technique.key);
+    delete card.dataset.utilityCard;
     card.dataset.techKey=key;
     button.dataset.techKey=key;
     button.type='button';
@@ -89,7 +107,7 @@ function bindButtons(){
 
 function patchRenderer(){
   const active=getfn('renderTechniques');
-  if(!active||active.__v395ExactIdentity)return;
+  if(!active||active.__v397ExactIdentity)return;
   const original=active;
   const wrapped=function(){
     const result=original.apply(this,arguments);
@@ -99,6 +117,7 @@ function patchRenderer(){
     setTimeout(bindButtons,0);
     return result;
   };
+  wrapped.__v397ExactIdentity=true;
   wrapped.__v395ExactIdentity=true;
   wrapped.__v394ExactButtons=true;
   wrapped.__v393=true;
@@ -109,13 +128,14 @@ function patchRenderer(){
 
 function observeGrid(){
   const grid=document.getElementById('techGrid');
-  if(!grid||grid.dataset.v395Observed==='1')return;
+  if(!grid||grid.dataset.v397Observed==='1')return;
+  grid.dataset.v397Observed='1';
   grid.dataset.v395Observed='1';
   const observer=new MutationObserver(()=>{
     clearTimeout(observer._timer);
     observer._timer=setTimeout(bindButtons,0);
   });
-  observer.observe(grid,{childList:true,subtree:true});
+  observer.observe(grid,{childList:true,subtree:true,attributes:true,attributeFilter:['data-tech-key']});
 }
 
 function bind(){patchRenderer();observeGrid();bindButtons();}
@@ -124,11 +144,12 @@ function start(){
   setTimeout(bind,100);
   setTimeout(bind,500);
   setTimeout(bind,1400);
-  setInterval(()=>{patchRenderer();observeGrid();},2000);
+  setInterval(()=>{patchRenderer();observeGrid();bindButtons();},2000);
   console.info('JJK Energy exact technique identity ready',VERSION);
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 root.JJKV394={version:VERSION,rebind:bindButtons,audit:()=>root.JJKV395TechniqueMap};
 root.JJKV395={version:VERSION,rebind:bindButtons,audit:()=>root.JJKV395TechniqueMap};
+root.JJKV397={version:VERSION,rebind:bindButtons,audit:()=>root.JJKV395TechniqueMap};
 })(typeof window!=='undefined'?window:globalThis);
