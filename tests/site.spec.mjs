@@ -45,14 +45,14 @@ test('home loads without uncaught errors, missing local files or duplicate runti
     showScreen: typeof window.showScreen,
     openCharacter: typeof window.openCharacter,
     techniqueFix: window.JJKV395?.version,
-    jogoCleanup: window.JJKV396?.version,
+    giocoCleanup: window.JJKV396?.version,
     runtimeGuard: window.JJKV397Runtime?.version
   }));
   expect(globals).toEqual({
     showScreen: 'function',
     openCharacter: 'function',
-    techniqueFix: '39.7.0',
-    giocoCleanup: '39.6.0',
+    techniqueFix: '39.7.1',
+    giocoCleanup: '39.7.1',
     runtimeGuard: '39.7.0'
   });
 
@@ -91,7 +91,12 @@ test('all characters render and every technique card keeps its exact key', async
         characterId,
         count: cards.length,
         audit,
-        utilityCardsClean: utilityCards.every(card => !card.dataset.techKey && !card.querySelector('.use-btn')?.dataset.techKey),
+        utilityCardsClean: utilityCards.every(card =>
+          card.classList.contains('v397-utility-card') &&
+          !card.classList.contains('tech-card') &&
+          !card.dataset.techKey &&
+          !card.querySelector('.use-btn')?.dataset.techKey
+        ),
         badCards: cards.map(card => ({
           name: card.querySelector('.tech-name')?.textContent?.trim() || '',
           cardKey: card.dataset.techKey || '',
@@ -102,7 +107,7 @@ test('all characters render and every technique card keeps its exact key', async
     }, id);
 
     expect(result.count, `${id} must show techniques at SG`).toBeGreaterThan(0);
-    expect(result.utilityCardsClean, `${id} utility card received a technique key`).toBe(true);
+    expect(result.utilityCardsClean, `${id} utility card was not isolated from technique dispatch`).toBe(true);
     expect(result.badCards, `${id} contains a wrongly bound technique button`).toEqual([]);
     expect(result.audit?.character, `${id} audit points to another character`).toBe(id);
     expect(result.audit?.ok, `${id} technique identity audit failed`).toBe(true);
@@ -129,6 +134,7 @@ test('Jogo displays one compact control system and hides obsolete panels', async
     return {
       activeExists: !!active,
       activeParent: active?.parentElement?.id || '',
+      parentShown: document.getElementById('jogoPanel')?.classList.contains('show') || false,
       visiblePanelIds: visiblePanels.map(element => element.id),
       legacyDisplay: legacy ? getComputedStyle(legacy).display : 'missing',
       duplicateDisplay: duplicate ? getComputedStyle(duplicate).display : 'missing',
@@ -138,6 +144,7 @@ test('Jogo displays one compact control system and hides obsolete panels', async
 
   expect(state.activeExists).toBe(true);
   expect(state.activeParent).toBe('jogoPanel');
+  expect(state.parentShown).toBe(true);
   expect(state.visiblePanelIds).toEqual(['v37JogoPanel']);
   expect(state.legacyDisplay).toBe('none');
   expect(['none', 'missing']).toContain(state.duplicateDisplay);
