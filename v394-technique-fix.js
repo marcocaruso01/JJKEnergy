@@ -10,7 +10,7 @@ document.documentElement.dataset.v392Events='1';
 document.documentElement.dataset.v365Capture='1';
 root.__JJK_V393_INSTALLED__=true;
 
-const VERSION='39.7.0';
+const VERSION='39.7.1';
 function read(name,fallback=null){try{const value=(0,eval)(name);return value===undefined?fallback:value;}catch(_){return root[name]===undefined?fallback:root[name];}}
 function getfn(name){const value=read(name,root[name]);return typeof value==='function'?value:null;}
 function setfn(name,value){root[name]=value;root.__v397fn=value;try{(0,eval)(name+'=globalThis.__v397fn');}catch(_){}delete root.__v397fn;}
@@ -19,7 +19,24 @@ function currentId(){return read('currentId',null);}
 function normalize(value){return String(value||'').replace(/\s+/g,' ').trim();}
 function isUtilityCard(card){
   const label=normalize(card?.querySelector('.tech-name')?.textContent).toLowerCase();
-  return !!card&&(card.classList.contains('v25-body-card')||label==='corpo'||card.dataset.utilityCard==='1');
+  return !!card&&(card.classList.contains('v25-body-card')||card.classList.contains('v397-utility-card')||label==='corpo'||card.dataset.utilityCard==='1');
+}
+
+function ensureUtilityStyle(){
+  if(document.getElementById('v397UtilityCardStyle'))return;
+  const style=document.createElement('style');
+  style.id='v397UtilityCardStyle';
+  style.textContent=`
+    #techGrid>.v397-utility-card{position:relative;overflow:hidden;border:1px solid rgba(255,205,96,.46);border-radius:18px;background:linear-gradient(145deg,rgba(66,48,12,.92),rgba(13,10,17,.98));min-height:510px}
+    #techGrid>.v397-utility-card>img{position:absolute;inset:48px 8px 82px;width:calc(100% - 16px);height:calc(100% - 130px);object-fit:contain;object-position:center top;background:#050308;border-radius:12px;filter:saturate(.7) brightness(.72)}
+    #techGrid>.v397-utility-card>.tech-content{position:absolute;z-index:3;left:0;right:0;bottom:0;min-height:82px;padding:11px;background:linear-gradient(transparent,#050308 28%)}
+    #techGrid>.v397-utility-card .tech-name{font-size:.86rem;line-height:1.12;font-weight:950;text-transform:uppercase}
+    #techGrid>.v397-utility-card .tech-cost{font-size:.76rem;color:#ddd;margin:3px 0 6px}
+    #techGrid>.v397-utility-card .use-btn{width:100%;padding:8px;border:0;border-radius:14px;background:linear-gradient(135deg,#916b18,#4e3509);color:#fff;font-weight:900;cursor:pointer}
+    @media(max-width:1080px){#techGrid>.v397-utility-card{min-height:490px}}
+    @media(max-width:620px){#techGrid>.v397-utility-card{min-height:560px}}
+  `;
+  document.head.appendChild(style);
 }
 
 function techniqueForCard(card){
@@ -56,17 +73,25 @@ function clearStaleIdentity(card,button){
   if(button)delete button.dataset.techKey;
 }
 
+function isolateUtilityCard(card,button){
+  ensureUtilityStyle();
+  clearStaleIdentity(card,button);
+  card.dataset.utilityCard='1';
+  card.classList.remove('tech-card');
+  card.classList.add('v397-utility-card');
+}
+
 function bindButtons(){
   const grid=document.getElementById('techGrid');
   const character=current();
   if(!grid||!character)return;
+  ensureUtilityStyle();
   const audit=[];
 
-  [...grid.querySelectorAll(':scope > .tech-card')].forEach(card=>{
+  [...grid.querySelectorAll(':scope > .tech-card,:scope > .v397-utility-card')].forEach(card=>{
     const button=card.querySelector('.use-btn');
     if(isUtilityCard(card)){
-      clearStaleIdentity(card,button);
-      card.dataset.utilityCard='1';
+      isolateUtilityCard(card,button);
       return;
     }
 
@@ -135,7 +160,7 @@ function observeGrid(){
     clearTimeout(observer._timer);
     observer._timer=setTimeout(bindButtons,0);
   });
-  observer.observe(grid,{childList:true,subtree:true,attributes:true,attributeFilter:['data-tech-key']});
+  observer.observe(grid,{childList:true,subtree:true,attributes:true,attributeFilter:['data-tech-key','class']});
 }
 
 function bind(){patchRenderer();observeGrid();bindButtons();}
@@ -144,7 +169,7 @@ function start(){
   setTimeout(bind,100);
   setTimeout(bind,500);
   setTimeout(bind,1400);
-  setInterval(()=>{patchRenderer();observeGrid();bindButtons();},2000);
+  setInterval(()=>{patchRenderer();observeGrid();bindButtons();},1000);
   console.info('JJK Energy exact technique identity ready',VERSION);
 }
 
