@@ -4,7 +4,7 @@
 const STORAGE_KEY='jjk_sfx_enabled_v1';
 const VOLUME_KEY='jjk_sfx_volume_v1';
 function storageGet(key){try{return localStorage.getItem(key);}catch(_){return null;}}
-function storageSet(key,value){try{localStorage.setItem(key,value);}catch(_){} }
+function storageSet(key,value){try{return localStorage.setItem(key,value);}catch(_){} }
 let enabled=storageGet(STORAGE_KEY)!=='0';
 const saved=Number(storageGet(VOLUME_KEY));
 let volume=Number.isFinite(saved)?Math.max(0,Math.min(1,saved)):.8;
@@ -41,7 +41,7 @@ function boot(){installAudio();[
  ['v362-rules-hotfix.js?v=20260724v362','jjk-v362-rules'],
  ['v363-copy-complete.js?v=20260725v363','jjk-v363-copy'],
  ['v364-pretty-technique-inputs.js?v=20260725v364b','jjk-v364-inputs'],
- ['v394-technique-fix.js?v=20260726v394d','jjk-v394-technique-fix'],
+ ['v394-technique-fix.js?v=20260727v395a','jjk-v395-technique-fix'],
  ['v392-gameplay.js?v=20260726v392b','jjk-v392-gameplay']
 ].forEach(([src,key])=>loadScript(src,key));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
