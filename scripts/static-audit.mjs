@@ -59,7 +59,7 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399a)/.test(index)) {
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab])/.test(index)) {
   fail('index.html does not use an approved V39.7/V39.8/V39.9 sfx cache key.');
 }
 
@@ -67,7 +67,7 @@ const sfx = read('sfx.js');
 if (!/v394-technique-fix\.js\?v=20260727v397b/.test(sfx)) fail('sfx.js does not load the latest exact technique identity fix.');
 if (!/v397-runtime-guards\.js\?v=20260727v397a/.test(sfx)) fail('sfx.js does not load the V39.7 runtime guards.');
 if (!/v398-itadori-variable-rules\.js\?v=20260728v398a/.test(sfx)) fail('sfx.js does not load the V39.8 Itadori and variable-technique rules.');
-if (!/v399-itadori-ui-progression\.js\?v=20260728v399a/.test(sfx)) fail('sfx.js does not load the V39.9 Itadori UI and progression fixes.');
+if (!/v399-itadori-ui-progression\.js\?v=20260728v399b/.test(sfx)) fail('sfx.js does not load the V39.9.1 Itadori UI, controls and progression fixes.');
 if (!/v396-jogo-ui-cleanup\.js\?v=20260727v397b/.test(sfx)) fail('sfx.js does not load the latest Jogo UI cleanup.');
 if (/v365-late-technique-ui\.js|v393-stability\.js/.test(sfx)) fail('sfx.js still loads an obsolete conflicting patch.');
 
@@ -98,13 +98,16 @@ if (!/pugno_divergente,black_flash_itadori,manipolazione_sangue,freccia_itadori,
 
 const itadoriUi = read('v399-itadori-ui-progression.js');
 if (!/function maxLifeForFingers/.test(itadoriUi) || !/4\+fingerBonuses\(value\)\.life/.test(itadoriUi)) {
-  fail('V39.9 does not synchronize Itadori maximum Life with finger milestones.');
+  fail('V39.9.1 does not synchronize Itadori maximum Life with finger milestones.');
 }
 if (!/function thresholdUpgrade/.test(itadoriUi) || !/notifyThreshold/.test(itadoriUi)) {
-  fail('V39.9 does not implement milestone upgrade notifications.');
+  fail('V39.9.1 does not implement milestone upgrade notifications.');
 }
 if (!/itadoriChosoPanel\{display:none!important\}/.test(itadoriUi) || !/v399-inline-blood/.test(itadoriUi)) {
-  fail('V39.9 does not clean the obsolete Itadori panel or integrate Blood Manipulation.');
+  fail('V39.9.1 does not clean the obsolete Itadori panel or integrate Blood Manipulation.');
+}
+if (!/function awardFingers/.test(itadoriUi) || !/data-v392-sukuna/.test(itadoriUi) || !/data-v392-monster/.test(itadoriUi)) {
+  fail('V39.9.1 does not bind the Itadori finger controls.');
 }
 
 const giocoCleanup = read('v396-jogo-ui-cleanup.js');
