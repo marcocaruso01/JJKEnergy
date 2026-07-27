@@ -7,8 +7,18 @@ async function openCleanPage(page) {
     try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
   });
   await page.goto('/?audit=397', { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => window.JJKV395 && window.JJKV396, null, { timeout: 15_000 });
+  await page.addStyleTag({ content: '#v21AuthGate{display:none!important;pointer-events:none!important}' });
+  await page.waitForFunction(() => window.JJKV395 && window.JJKV396 && window.JJKV397Runtime, null, { timeout: 15_000 });
   await page.waitForTimeout(700);
+}
+
+async function setSpecialGrade(page) {
+  await page.evaluate(() => {
+    const grades = [...document.querySelectorAll('#gradeRow .grade-btn')];
+    if (grades.length !== 6) throw new Error(`Expected 6 grade buttons, found ${grades.length}`);
+    grades[grades.length - 1].click();
+  });
+  await page.waitForTimeout(220);
 }
 
 function observeRuntime(page) {
@@ -35,13 +45,15 @@ test('home loads without uncaught errors, missing local files or duplicate runti
     showScreen: typeof window.showScreen,
     openCharacter: typeof window.openCharacter,
     techniqueFix: window.JJKV395?.version,
-    jogoCleanup: window.JJKV396?.version
+    jogoCleanup: window.JJKV396?.version,
+    runtimeGuard: window.JJKV397Runtime?.version
   }));
   expect(globals).toEqual({
     showScreen: 'function',
     openCharacter: 'function',
-    techniqueFix: '39.5.0',
-    jogoCleanup: '39.6.0'
+    techniqueFix: '39.7.0',
+    giocoCleanup: '39.6.0',
+    runtimeGuard: '39.7.0'
   });
 
   const duplicates = await page.evaluate(() => {
@@ -66,20 +78,20 @@ test('all characters render and every technique card keeps its exact key', async
   for (const id of characters) {
     await page.evaluate(characterId => window.openCharacter(characterId, { silentStats: true }), id);
     await expect(page.locator('#player')).toHaveClass(/active/);
-
-    const grades = page.locator('#gradeRow .grade-btn');
-    await expect(grades).toHaveCount(6);
-    await grades.last().click();
-    await page.waitForTimeout(180);
+    await expect(page.locator('#gradeRow .grade-btn')).toHaveCount(6);
+    await setSpecialGrade(page);
     await page.evaluate(() => window.JJKV395.rebind());
 
     const result = await page.evaluate(characterId => {
-      const cards = [...document.querySelectorAll('#techGrid > .tech-card')];
+      const cards = [...document.querySelectorAll('#techGrid > .tech-card')]
+        .filter(card => !card.classList.contains('v25-body-card') && card.dataset.utilityCard !== '1');
+      const utilityCards = [...document.querySelectorAll('#techGrid > .v25-body-card')];
       const audit = window.JJKV395.audit();
       return {
         characterId,
         count: cards.length,
         audit,
+        utilityCardsClean: utilityCards.every(card => !card.dataset.techKey && !card.querySelector('.use-btn')?.dataset.techKey),
         badCards: cards.map(card => ({
           name: card.querySelector('.tech-name')?.textContent?.trim() || '',
           cardKey: card.dataset.techKey || '',
@@ -90,6 +102,7 @@ test('all characters render and every technique card keeps its exact key', async
     }, id);
 
     expect(result.count, `${id} must show techniques at SG`).toBeGreaterThan(0);
+    expect(result.utilityCardsClean, `${id} utility card received a technique key`).toBe(true);
     expect(result.badCards, `${id} contains a wrongly bound technique button`).toEqual([]);
     expect(result.audit?.character, `${id} audit points to another character`).toBe(id);
     expect(result.audit?.ok, `${id} technique identity audit failed`).toBe(true);
@@ -103,7 +116,7 @@ test('Jogo displays one compact control system and hides obsolete panels', async
   const runtime = observeRuntime(page);
   await openCleanPage(page);
   await page.evaluate(() => window.openCharacter('jogo', { silentStats: true }));
-  await page.locator('#gradeRow .grade-btn').last().click();
+  await setSpecialGrade(page);
   await page.waitForTimeout(350);
   await page.evaluate(() => window.JJKV396.clean());
 
@@ -143,7 +156,7 @@ test('mobile pages do not create destructive horizontal overflow', async ({ page
 
   for (const id of characters) {
     await page.evaluate(characterId => window.openCharacter(characterId, { silentStats: true }), id);
-    await page.waitForTimeout(120);
+    await page.waitForTimeout(150);
     const overflow = await page.evaluate(() => ({
       width: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
