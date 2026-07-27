@@ -1,7 +1,8 @@
-name: Apply V39.7.1 cache bust
+name: Apply V39.8 cache bust
 
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/apply-v396-cache-bust.yml'
   workflow_dispatch:
@@ -28,7 +29,7 @@ jobs:
           text = path.read_text(encoding='utf-8')
           updated = re.sub(
               r'sfx\.js\?v=[^"\']+',
-              'sfx.js?v=20260727s397b',
+              'sfx.js?v=20260728s398a',
               text,
               count=1,
           )
@@ -45,5 +46,5 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Bust cache for V39.7.1 final fixes"
+          git commit -m "Bust cache for V39.8 Itadori rules"
           git push
