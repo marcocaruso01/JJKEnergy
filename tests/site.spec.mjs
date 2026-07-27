@@ -8,7 +8,7 @@ async function openCleanPage(page) {
   });
   await page.goto('/?audit=399', { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '#v21AuthGate{display:none!important;pointer-events:none!important}' });
-  await page.waitForFunction(() => window.JJKV395 && window.JJKV396 && window.JJKV397Runtime && window.JJKV398 && window.JJKV399, null, { timeout: 15_000 });
+  await page.waitForFunction(() => window.JJKV395 && window.JJKV396 && window.JJKV397Runtime && window.__JJK_V398_INSTALLED__ && window.__JJK_V399_INSTALLED__, null, { timeout: 15_000 });
   await page.waitForTimeout(700);
 }
 
@@ -47,8 +47,8 @@ test('home loads without uncaught errors, missing local files or duplicate runti
     techniqueFix: window.JJKV395?.version,
     giocoCleanup: window.JJKV396?.version,
     runtimeGuard: window.JJKV397Runtime?.version,
-    itadoriRules: window.JJKV398?.version,
-    itadoriUi: window.JJKV399?.version
+    itadoriRulesInstalled: !!window.__JJK_V398_INSTALLED__,
+    itadoriUiInstalled: !!window.__JJK_V399_INSTALLED__
   }));
   expect(globals).toEqual({
     showScreen: 'function',
@@ -56,8 +56,8 @@ test('home loads without uncaught errors, missing local files or duplicate runti
     techniqueFix: '39.7.1',
     giocoCleanup: '39.7.1',
     runtimeGuard: '39.7.0',
-    itadoriRules: '39.8.0',
-    itadoriUi: '39.9.0'
+    itadoriRulesInstalled: true,
+    itadoriUiInstalled: true
   });
 
   const duplicates = await page.evaluate(() => {
@@ -137,6 +137,7 @@ test('Itadori uses one clean panel, announces finger upgrades and updates maximu
   await expect(page.locator('#lifeMaxValue')).toHaveText('8');
   await expect(page.locator('#itadoriChosoPanel')).toBeHidden();
   await expect(page.locator('#v37BloodNowBtn')).toHaveClass(/v399-inline-blood/);
+  await page.waitForFunction(() => window.JJKV399Audit?.ok === true, null, { timeout: 5_000 });
 
   const state = await page.evaluate(() => {
     const panel = document.getElementById('v392ItadoriPanel');
@@ -149,7 +150,7 @@ test('Itadori uses one clean panel, announces finger upgrades and updates maximu
       obsoleteDisplay: obsolete ? getComputedStyle(obsolete).display : 'missing',
       maxLife: document.getElementById('lifeMaxValue')?.textContent || '',
       notices,
-      audit: window.JJKV399.audit()
+      audit: window.JJKV399Audit
     };
   });
 
