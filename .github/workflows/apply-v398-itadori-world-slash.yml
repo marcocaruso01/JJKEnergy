@@ -1,0 +1,220 @@
+name: Apply V39.8 Itadori and variable techniques
+
+on:
+  push:
+    branches: [agent/itadori-world-slash]
+    paths:
+      - '.github/workflows/apply-v398-itadori-world-slash.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/itadori-world-slash
+          fetch-depth: 0
+
+      - name: Apply requested rules only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one match, found {count}')
+              return text.replace(old, new, 1)
+
+          def regex_once(text, pattern, replacement, label):
+              updated, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one match, found {count}')
+              return updated
+
+          # Base game fallback: rewrite only Itadori and variable-die handling.
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          itadori_block = """itadori:{name:'Yuji Itadori',maxLife:4,image:'assets/itadori_sheet.webp',baseBody:4,coins:1,hasFingers:true,innateName:'Richiamo del Ricettacolo Perfetto',innateEffect:'Guadagna 1 Dito per ogni mostro abbattuto, fino a 12. Uccidere Sukuna concede 5 Dita. Quando si trova in una casella adiacente a un giocatore che possiede un Dito, viene attirato nella sua casella e ruba immediatamente 1 Dito. Nel mazzo sono presenti 10 Dita.',grades:[
+{id:'G4',label:'Grado 4',max:10,exp:0},{id:'G3',label:'Grado 3',max:12,exp:9},{id:'G2',label:'Grado 2',max:15,exp:19},{id:'G1',label:'Grado 1',max:18,exp:30},{id:'SS',label:'Semi Special Grade',max:20,exp:42},{id:'SG',label:'Special Grade',max:21,exp:50}],
+techniques:[
+{key:'pugno_divergente',name:'Pugno Divergente',grade:'G4',cost:4,bonus:4,image:'assets/itadori_g4.webp'},
+{key:'black_flash_itadori',name:'Black Flash',grade:'G3',cost:0,bonus:null,itadoriBlackFlash:true,image:'assets/itadori_g1.webp',v27CostLabel:'Costo: somma finale dei dadi validi',effect:'Continua a lanciare dadi e a sommarli finché ogni risultato è maggiore o uguale al risultato precedente. Se l’Energia Maledetta non basta, perdi 1 Corpo per ogni punto mancante.'},
+{key:'manipolazione_sangue',name:'Manipolazione del Sangue',grade:'G2',cost:0,bonus:null,image:'assets/itadori_g3.webp',effect:'Una volta per turno, in qualsiasi momento, puoi convertire 1 Vita in 10 Energia Maledetta.'},
+{key:'freccia_itadori',name:'Freccia Infuocata',grade:'G1',cost:10,bonus:10,lifeCost:1,image:'assets/itadori_freccia.webp',extra:'Costo aggiuntivo: perdi 1 Vita.'},
+{key:'richiamo_anima_sukuna',name:\"(Dominio) Richiamo dell'Anima di Sukuna\",grade:'SS',cost:0,bonus:null,image:'assets/itadori_ss.webp',v392Soul:true,v27CostLabel:'Costo: risultato del dado Taglio di Sukuna',effect:'Lancia il dado Taglio di Sukuna e 2 dadi normali. Il costo è uguale al risultato del dado Taglio; se l’Energia Maledetta non basta, il Corpo fornito da quel dado si abbassa all’Energia disponibile.'},
+{key:'immortalita',name:'Immortalità',grade:'SG',cost:0,bonus:null,image:'assets/itadori_taglio.webp',effect:'Una volta per partita, quando stai per morire, recuperi immediatamente tutta la Vita e tutta l’Energia Maledetta.'}
+]},
+yuta:"""
+          text = regex_once(
+              text,
+              r"itadori:\{name:'Yuji Itadori'.*?\n\]\},\nyuta:",
+              itadori_block,
+              'index Itadori block',
+          )
+
+          old_black = """    const mcBlackCost=mcDiscountCost(currentId,result);const before=energy,spent=bossFree?0:Math.min(energy,mcBlackCost),missing=bossFree?0:Math.max(0,mcBlackCost-energy);if(!bossFree)energy-=spent;used.push(k);recordTechniqueUse(currentId,t,bossFree?0:spent);
+    const chosoBonus=itadoriOneUse;const total=Math.max(0,effectiveBaseBody()+result+combatBonus+chosoBonus-missing);
+    let text='Risultato dadi '+result+' aggiunto al Combattimento. Corpo base '+effectiveBaseBody()+' + dadi '+result+' + bonus aggiuntivo '+combatBonus+(chosoBonus?' + Aiuto di Choso '+chosoBonus:'')+(missing?' − penalità Energia mancante '+missing:'')+' = '+total+'. Energia spesa: '+spent+'.'+(bossFree?' Boss Rush: costo Energia annullato.':'');"""
+          new_black = """    const mcBlackCost=mcDiscountCost(currentId,result);const before=energy,spent=bossFree?0:Math.min(before,mcBlackCost),diceBody=bossFree?result:Math.min(result,before),missing=bossFree?0:Math.max(0,result-diceBody);if(!bossFree)energy-=spent;used.push(k);recordTechniqueUse(currentId,t,bossFree?0:spent);
+    const chosoBonus=itadoriOneUse;const total=Math.max(0,effectiveBaseBody()+diceBody+combatBonus+chosoBonus);
+    let text='Somma dei dadi validi: '+result+'. Corpo base '+effectiveBaseBody()+' + Corpo dei dadi '+diceBody+' + bonus aggiuntivo '+combatBonus+(chosoBonus?' + Aiuto di Choso '+chosoBonus:'')+(missing?' (−'+missing+' Corpo perché l’Energia disponibile era '+before+')':'')+' = '+total+'. Energia spesa: '+spent+'.'+(bossFree?' Boss Rush: costo Energia annullato.':'');"""
+          text = replace_once(text, old_black, new_black, 'index Black Flash cap')
+
+          old_dynamic = """  if(t.dynamicCost){
+    const raw=prompt('Inserisci il risultato del d24 (1-24):');
+    if(raw===null)return;
+    const roll=Number(raw);
+    if(!Number.isInteger(roll)||roll<1||roll>24){
+      showModal('Valore non valido','','Inserisci un numero intero da 1 a 24.');
+      return;
+    }
+    const mcDynamicCost=mcDiscountCost(currentId,roll);
+    if(!bossFree&&energy<mcDynamicCost){
+      addLog('Azione fallita',t.name+': servono '+mcDynamicCost+' Energia.');
+      showModal('Energia insufficiente','','Il d24 ha dato '+roll+'; con gli effetti attivi il costo è '+mcDynamicCost+', ma hai solo '+energy+' Energia.');
+      return;
+    }
+    const before=energy;
+    if(!bossFree)energy-=mcDynamicCost;
+    used.push(k);
+    recordTechniqueUse(currentId,t,bossFree?0:mcDynamicCost);
+    const total=effectiveBaseBody()+roll+combatBonus;
+    const text='Corpo base '+effectiveBaseBody()+' + risultato d24 '+roll+' + bonus aggiuntivo '+combatBonus+' = '+total+'.';
+    addLog('Tecnica utilizzata',t.name+': '+before+' → '+energy+' Energia. '+text);
+    saveState();renderAll();playTechniqueEffect(t);showModal(t.name,total+' Combattimento',text);
+    return;
+  }"""
+          new_dynamic = """  if(t.dynamicCost){
+    const raw=prompt('Inserisci il risultato del d24 (1-24):');
+    if(raw===null)return;
+    const roll=Number(raw);
+    if(!Number.isInteger(roll)||roll<1||roll>24){
+      showModal('Valore non valido','','Inserisci un numero intero da 1 a 24.');
+      return;
+    }
+    const before=Math.max(0,Number(energy)||0),mcDynamicCost=mcDiscountCost(currentId,roll);
+    const paid=bossFree?0:Math.min(before,mcDynamicCost);
+    const appliedBody=bossFree?roll:Math.min(roll,before);
+    const missing=bossFree?0:Math.max(0,roll-appliedBody);
+    if(!bossFree)energy=before-paid;
+    used.push(k);
+    recordTechniqueUse(currentId,t,paid);
+    const total=effectiveBaseBody()+appliedBody+combatBonus;
+    const text='Risultato d24 '+roll+'. Corpo applicato '+appliedBody+(missing?' (−'+missing+' perché l’Energia disponibile era '+before+')':'')+'. Costo effettivo '+mcDynamicCost+', Energia pagata '+paid+'. Corpo totale: '+effectiveBaseBody()+' + '+appliedBody+' + bonus '+combatBonus+' = '+total+'.';
+    addLog('Tecnica utilizzata',t.name+': '+before+' → '+energy+' Energia. '+text);
+    saveState();renderAll();playTechniqueEffect(t);showModal(t.name,total+' Combattimento',text);
+    return;
+  }"""
+          text = replace_once(text, old_dynamic, new_dynamic, 'index dynamic cost cap')
+          text = re.sub(r"sfx\.js\?v=[^\"']+", 'sfx.js?v=20260728s398a', text, count=1)
+          text = re.sub(r"v37-update\.js\?v=[^\"']+", 'v37-update.js?v=20260728v398a', text, count=1)
+          path.write_text(text, encoding='utf-8')
+
+          # V37: copied variable techniques and Itadori data.
+          path = Path('v37-update.js')
+          text = path.read_text(encoding='utf-8')
+          old_resolver = """function resolveVariableCost(roll,availableEnergy,effectiveCost=roll,bossFree=false){
+  const rolled=Math.max(0,Math.trunc(num(roll)));
+  const available=Math.max(0,num(availableEnergy));
+  const cost=Math.max(0,num(effectiveCost));
+  if(bossFree)return {roll:rolled,paid:0,missing:0,body:rolled,effectiveCost:cost};
+  const paid=Math.min(available,cost);
+  const missing=Math.max(0,cost-paid);
+  return {roll:rolled,paid,missing,body:Math.max(0,rolled-missing),effectiveCost:cost};
+}"""
+          new_resolver = """function resolveVariableCost(roll,availableEnergy,effectiveCost=roll,bossFree=false){
+  const rolled=Math.max(0,Math.trunc(num(roll)));
+  const available=Math.max(0,num(availableEnergy));
+  const cost=Math.max(0,num(effectiveCost));
+  if(bossFree)return {roll:rolled,paid:0,missing:0,body:rolled,effectiveCost:cost};
+  const paid=Math.min(available,cost);
+  const body=Math.min(rolled,available);
+  const missing=Math.max(0,rolled-body);
+  return {roll:rolled,paid,missing,body,effectiveCost:cost};
+}"""
+          text = replace_once(text, old_resolver, new_resolver, 'v37 variable cost cap')
+          text = replace_once(text, "innateEffect:'Ottiene 1 Dito per ogni mostro abbattuto, fino a 12; sconfiggere Sukuna concede 5 Dita. Se è adiacente a un giocatore con un Dito viene attirato nella sua casella e ne ruba immediatamente 1.',", "innateEffect:'Guadagna 1 Dito per ogni mostro abbattuto, fino a 12. Uccidere Sukuna concede 5 Dita. Quando si trova in una casella adiacente a un giocatore che possiede un Dito, viene attirato nella sua casella e ruba immediatamente 1 Dito. Nel mazzo sono presenti 10 Dita.',", 'v37 Itadori innate')
+          text = replace_once(text, 'Progressione Dita V37', 'Progressione Dita', 'v37 panel title')
+          text = replace_once(text, "variableCostCap:resolveVariableCost(16,14,16,false).body===14,", "variableCostCap:resolveVariableCost(16,14,16,false).body===14,\n    discountedVariableCap:resolveVariableCost(16,14,13,false).body===14&&resolveVariableCost(16,14,13,false).paid===13,", 'v37 runtime check')
+          path.write_text(text, encoding='utf-8')
+
+          # V39.2 authoritative runtime.
+          path = Path('v392-gameplay.js')
+          text = path.read_text(encoding='utf-8')
+          text = replace_once(text, "const VERSION='39.2.0';", "const VERSION='39.8.0';", 'v392 version')
+          text = replace_once(text, "function resolveVariableCost(roll,energy,free=false){const r=Math.max(0,Math.trunc(num(roll))),e=Math.max(0,num(energy)),paid=free?0:Math.min(r,e);return{roll:r,paid,body:free?r:paid,missing:free?0:Math.max(0,r-paid)};}", "function resolveVariableCost(roll,energy,effectiveCost=roll,free=false){if(typeof effectiveCost==='boolean'){free=effectiveCost;effectiveCost=roll;}const r=Math.max(0,Math.trunc(num(roll))),e=Math.max(0,num(energy)),cost=Math.max(0,num(effectiveCost)),paid=free?0:Math.min(cost,e),body=free?r:Math.min(r,e);return{roll:r,paid,body,missing:free?0:Math.max(0,r-body),effectiveCost:cost};}", 'v392 resolver')
+          text = regex_once(text, r"itadori:\{name:'Yuji Itadori'.*?\n    \]\}", """itadori:{name:'Yuji Itadori',baseMaxLife:4,maxLife:4,baseBody:4,coins:1,hasFingers:true,innateName:'Richiamo del Ricettacolo Perfetto',innateEffect:'Guadagna 1 Dito per ogni mostro abbattuto, fino a 12. Uccidere Sukuna concede 5 Dita. Quando si trova in una casella adiacente a un giocatore che possiede un Dito, viene attirato nella sua casella e ruba immediatamente 1 Dito. Nel mazzo sono presenti 10 Dita.',grades:grades([[0,10],[9,12],[19,15],[30,18],[42,20],[50,21]]),techniques:[
+      {key:'pugno_divergente',name:'Pugno Divergente',grade:'G4',cost:4,bonus:4,image:'assets/itadori_g4.webp'},
+      {key:'black_flash_itadori',name:'Black Flash',grade:'G3',cost:0,bonus:null,image:'assets/itadori_g1.webp',v392BlackFlash:true,itadoriBlackFlash:true,v27CostLabel:'Costo: somma finale dei dadi validi',effect:'Continua a lanciare dadi e a sommarli finché ogni risultato è maggiore o uguale al precedente. Se l’Energia Maledetta non basta, perdi 1 Corpo per ogni punto mancante.'},
+      {key:'manipolazione_sangue',name:'Manipolazione del Sangue',grade:'G2',cost:0,bonus:null,image:'assets/itadori_g3.webp',v392Blood:true,v27CostLabel:'1 Vita → 10 Energia',effect:'Una volta per turno, in qualsiasi momento, puoi convertire 1 Vita in 10 Energia Maledetta.'},
+      {key:'freccia_itadori',name:'Freccia Infuocata',grade:'G1',cost:10,bonus:10,lifeCost:1,image:'assets/itadori_freccia.webp',extra:'Costo aggiuntivo: perdi 1 Vita.'},
+      {key:'richiamo_anima_sukuna',name:\"(Dominio) Richiamo dell'Anima di Sukuna\",grade:'SS',cost:0,bonus:null,image:'assets/itadori_ss.webp',v392Soul:true,v27CostLabel:'Costo: risultato del dado Taglio di Sukuna',effect:'Lancia il dado Taglio di Sukuna e 2 dadi normali. Il costo è uguale al risultato del dado Taglio; se l’Energia Maledetta non basta, il Corpo fornito da quel dado si abbassa all’Energia disponibile.'},
+      {key:'immortalita',name:'Immortalità',grade:'SG',cost:0,bonus:null,image:'assets/itadori_taglio.webp',v392Immortal:true,effect:'Una volta per partita, quando stai per morire, recuperi immediatamente tutta la Vita e tutta l’Energia Maledetta.'}
+    ]}""", 'v392 Itadori blueprint')
+          text = replace_once(text, "function maxEnergy(){const g=gradeObject();return num(g.max)+(cid()==='itadori'?bonuses(read('itadoriMaxFingers',0)).energy:0);}", "function maxEnergy(){const g=gradeObject();return num(g.max)+(cid()==='itadori'?bonuses(read('itadoriMaxFingers',0)).energy:0);}\nfunction discountedCost(value){const f=getfn('mcDiscountCost');try{return Math.max(0,num(f?f(cid(),value):value));}catch(_){return Math.max(0,num(value));}}", 'v392 discounted cost helper')
+          insertion = """function useVariableTechnique(t){
+  const raw=root.prompt('Inserisci il risultato del d24 (1-24):');if(raw===null)return;
+  const roll=Number(raw);if(!Number.isInteger(roll)||roll<1||roll>24)return show('Valore non valido','','Inserisci un numero intero da 1 a 24.');
+  const before=Math.max(0,num(read('energy',0))),effective=discountedCost(roll),resolved=resolveVariableCost(roll,before,effective,bossFree());if(!bossFree())write('energy',before-resolved.paid);
+  const total=baseBody()+resolved.body+num(read('combatBonus',0));
+  finish(t,{before,paid:resolved.paid},total,'d24 '+roll+': Corpo applicato '+resolved.body+(resolved.missing?' (−'+resolved.missing+' perché l’Energia disponibile era '+before+')':'')+'. Costo effettivo '+effective+', pagato '+resolved.paid+'. Totale '+baseBody()+' + '+resolved.body+' + '+num(read('combatBonus',0))+' = '+total+'.');
+}
+"""
+          text = replace_once(text, 'function useBlackFlash(t){', insertion + 'function useBlackFlash(t){', 'v392 variable handler insertion')
+          text = replace_once(text, "  const before=Math.max(0,num(read('energy',0))),resolved=resolveVariableCost(a.sum,before,bossFree());if(!bossFree())write('energy',before-resolved.paid);", "  const before=Math.max(0,num(read('energy',0))),effective=discountedCost(a.sum),resolved=resolveVariableCost(a.sum,before,effective,bossFree());if(!bossFree())write('energy',before-resolved.paid);", 'v392 Black Flash resolver')
+          text = replace_once(text, "  const before=Math.max(0,num(read('energy',0))),resolved=resolveVariableCost(vals[0],before,bossFree());if(!bossFree())write('energy',before-resolved.paid);const normal=vals[1]+vals[2],total=baseBody()+resolved.body+normal+num(read('combatBonus',0));", "  const before=Math.max(0,num(read('energy',0))),effective=discountedCost(vals[0]),resolved=resolveVariableCost(vals[0],before,effective,bossFree());if(!bossFree())write('energy',before-resolved.paid);const normal=vals[1]+vals[2],total=baseBody()+resolved.body+normal+num(read('combatBonus',0));", 'v392 Soul resolver')
+          text = replace_once(text, "  applyBlueprints();if(!roomAllowed())return;const t=current()?.techniques?.find(x=>x.key===key);if(!t)return legacyUseTechnique?.apply(root,args||[key]);if(used().includes(key)&&!t.v392Immortal)return;\n  if(cid()==='jogo')return useJogo(t);", "  applyBlueprints();if(!roomAllowed())return;const t=current()?.techniques?.find(x=>x.key===key);if(!t)return legacyUseTechnique?.apply(root,args||[key]);if(used().includes(key)&&!t.v392Immortal)return;\n  if(t.dynamicCost)return useVariableTechnique(t);\n  if(cid()==='jogo')return useJogo(t);", 'v392 dispatch dynamic techniques')
+          text = replace_once(text, "blackFlash:analyzeBlackFlash([1,2,2,6]).sum===11,tojiUnlimited:true,", "blackFlash:analyzeBlackFlash([1,2,2,6]).sum===11,variableEnergyCap:resolveVariableCost(16,14,13,false).body===14&&resolveVariableCost(16,14,13,false).paid===13,tojiUnlimited:true,", 'v392 audit')
+          path.write_text(text, encoding='utf-8')
+
+          # Stable rules module and focused tests.
+          path = Path('v39-stable.js')
+          text = path.read_text(encoding='utf-8')
+          text = replace_once(text, "const VERSION='39.0.0'", "const VERSION='39.8.0'", 'v39 stable version')
+          text = replace_once(text, "function resolveVariableCost(roll,energy,boss=false){const r=Math.max(0,Math.trunc(num(roll))),e=Math.max(0,num(energy)),paid=boss?0:Math.min(r,e),body=boss?r:paid;return{roll:r,paid,body,missing:Math.max(0,r-body)};}", "function resolveVariableCost(roll,energy,effectiveCost=roll,boss=false){if(typeof effectiveCost==='boolean'){boss=effectiveCost;effectiveCost=roll;}const r=Math.max(0,Math.trunc(num(roll))),e=Math.max(0,num(energy)),cost=Math.max(0,num(effectiveCost)),paid=boss?0:Math.min(cost,e),body=boss?r:Math.min(r,e);return{roll:r,paid,body,missing:Math.max(0,r-body),effectiveCost:cost};}", 'v39 stable resolver')
+          text = replace_once(text, "innateEffect:'1 Dito per mostro, massimo 12; Sukuna concede 5 Dita; da una casella adiacente ruba 1 Dito al possessore.'", "innateEffect:'Guadagna 1 Dito per ogni mostro abbattuto, fino a 12. Uccidere Sukuna concede 5 Dita. Da una casella adiacente viene attirato dal possessore e ruba immediatamente 1 Dito. Nel mazzo sono presenti 10 Dita.'", 'v39 stable Itadori innate')
+          path.write_text(text, encoding='utf-8')
+
+          path = Path('tests/v39-rules.test.js')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace("assert.equal(rules.version,'39.0.0');", "assert.equal(rules.version,'39.8.0');")
+          text = regex_once(text, r"assert\.deepEqual\(rules\.resolveVariableCost\(16,14,false\).*?assert\.deepEqual\(rules\.resolveVariableCost\(24,3,true\).*?;", """assert.deepEqual(rules.resolveVariableCost(16,14,16,false),{roll:16,paid:14,body:14,missing:2,effectiveCost:16});
+assert.deepEqual(rules.resolveVariableCost(16,14,13,false),{roll:16,paid:13,body:14,missing:2,effectiveCost:13});
+assert.deepEqual(rules.resolveVariableCost(24,0,24,false),{roll:24,paid:0,body:0,missing:24,effectiveCost:24});
+assert.deepEqual(rules.resolveVariableCost(24,3,24,true),{roll:24,paid:0,body:24,missing:0,effectiveCost:24});""", 'v39 variable tests')
+          text = text.replace("const bp=rules.blueprints();", "const bp=rules.blueprints();\nassert.equal(bp.itadori.maxLife,4);\nassert.equal(bp.itadori.baseBody,4);\nassert.equal(bp.itadori.coins,1);\nassert.match(bp.itadori.innateEffect,/10 Dita/);")
+          path.write_text(text, encoding='utf-8')
+
+          path = Path('sfx.js')
+          text = path.read_text(encoding='utf-8')
+          text = re.sub(r"v392-gameplay\.js\?v=[^\"']+", 'v392-gameplay.js?v=20260728v398a', text, count=1)
+          path.write_text(text, encoding='utf-8')
+
+          path = Path('package.json')
+          text = path.read_text(encoding='utf-8').replace('"version": "39.7.1"', '"version": "39.8.0"')
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate syntax and focused rules
+        run: |
+          node --check v37-update.js
+          node --check v392-gameplay.js
+          node --check v39-stable.js
+          node --check sfx.js
+          node tests/v39-rules.test.js
+
+      - name: Commit requested changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html v37-update.js v392-gameplay.js v39-stable.js sfx.js package.json tests/v39-rules.test.js
+          git commit -m "V39.8: update Itadori and cap variable techniques by energy"
+          git push origin HEAD:agent/itadori-world-slash
