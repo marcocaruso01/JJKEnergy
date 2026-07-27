@@ -1,0 +1,68 @@
+name: JJK Energy Site Audit
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Static integrity audit
+        id: static
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run audit:static 2>&1 | tee static-audit.log
+
+      - name: Browser tests
+        id: browser
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:e2e 2>&1 | tee browser-audit.log
+
+      - name: Upload audit diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-audit-diagnostics
+          path: |
+            static-audit.log
+            browser-audit.log
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Enforce audit result
+        if: always()
+        shell: bash
+        run: |
+          echo "Static audit: ${{ steps.static.outcome }}"
+          echo "Browser audit: ${{ steps.browser.outcome }}"
+          test "${{ steps.static.outcome }}" = "success"
+          test "${{ steps.browser.outcome }}" = "success"
