@@ -59,12 +59,13 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=20260727s396a/.test(index)) {
-  fail('index.html does not use the current V39.6 sfx cache key.');
+if (!/sfx\.js\?v=20260727s396a/.test(index) && !/sfx\.js\?v=20260727s397a/.test(index)) {
+  fail('index.html does not use an approved V39.6/V39.7 sfx cache key.');
 }
 
 const sfx = read('sfx.js');
-if (!/v394-technique-fix\.js\?v=20260727v395a/.test(sfx)) fail('sfx.js does not load the exact technique identity fix.');
+if (!/v394-technique-fix\.js\?v=20260727v397a/.test(sfx)) fail('sfx.js does not load the V39.7 exact technique identity fix.');
+if (!/v397-runtime-guards\.js\?v=20260727v397a/.test(sfx)) fail('sfx.js does not load the V39.7 runtime guards.');
 if (!/v396-jogo-ui-cleanup\.js\?v=20260727v396a/.test(sfx)) fail('sfx.js does not load the Jogo UI cleanup.');
 if (/v365-late-technique-ui\.js|v393-stability\.js/.test(sfx)) fail('sfx.js still loads an obsolete conflicting patch.');
 
@@ -73,8 +74,16 @@ if (/available\s*\[\s*i\s*\]/.test(exactTechniqueFix)) fail('Technique fix still
 if (!/techniqueForCard/.test(exactTechniqueFix) || !/dataset\.techKey/.test(exactTechniqueFix)) {
   fail('Technique fix is missing semantic card identity binding.');
 }
+if (!/isUtilityCard/.test(exactTechniqueFix) || !/clearStaleIdentity/.test(exactTechniqueFix)) {
+  fail('Technique fix does not exclude utility cards from technique identity mapping.');
+}
 
-const jogoCleanup = read('v396-jogo-ui-cleanup.js');
+const runtimeGuards = read('v397-runtime-guards.js');
+if (!/renderAll/.test(runtimeGuards) || !/hasCharacter/.test(runtimeGuards)) {
+  fail('Runtime guard does not protect character rendering when no character is selected.');
+}
+
+const giocoCleanup = read('v396-jogo-ui-cleanup.js');
 if (!/#v27JogoTerrain\{display:none!important\}/.test(jogoCleanup)) fail('Jogo cleanup does not suppress the obsolete V27 terrain panel.');
 if (!/#v392JogoPanel\{display:none!important\}/.test(jogoCleanup)) fail('Jogo cleanup does not suppress the duplicated V39.2 panel.');
 
