@@ -59,13 +59,14 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=20260727s397[ab]/.test(index)) {
-  fail('index.html does not use an approved V39.7 sfx cache key.');
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a)/.test(index)) {
+  fail('index.html does not use an approved V39.7/V39.8 sfx cache key.');
 }
 
 const sfx = read('sfx.js');
 if (!/v394-technique-fix\.js\?v=20260727v397b/.test(sfx)) fail('sfx.js does not load the latest exact technique identity fix.');
 if (!/v397-runtime-guards\.js\?v=20260727v397a/.test(sfx)) fail('sfx.js does not load the V39.7 runtime guards.');
+if (!/v398-itadori-variable-rules\.js\?v=20260728v398a/.test(sfx)) fail('sfx.js does not load the V39.8 Itadori and variable-technique rules.');
 if (!/v396-jogo-ui-cleanup\.js\?v=20260727v397b/.test(sfx)) fail('sfx.js does not load the latest Jogo UI cleanup.');
 if (/v365-late-technique-ui\.js|v393-stability\.js/.test(sfx)) fail('sfx.js still loads an obsolete conflicting patch.');
 
@@ -83,10 +84,21 @@ if (!/renderAll/.test(runtimeGuards) || !/hasCharacter/.test(runtimeGuards)) {
   fail('Runtime guard does not protect character rendering when no character is selected.');
 }
 
-const jogoCleanup = read('v396-jogo-ui-cleanup.js');
-if (!/#v27JogoTerrain\{display:none!important\}/.test(jogoCleanup)) fail('Jogo cleanup does not suppress the obsolete V27 terrain panel.');
-if (!/#v392JogoPanel\{display:none!important\}/.test(jogoCleanup)) fail('Jogo cleanup does not suppress the duplicated V39.2 panel.');
-if (!/#jogoPanel\.show #v37JogoPanel/.test(jogoCleanup)) fail('Jogo cleanup does not force the single active panel to remain visible.');
+const requestedRules = read('v398-itadori-variable-rules.js');
+if (!/function resolveVariableCost/.test(requestedRules) || !/Math\.min\(rolled,available\)/.test(requestedRules)) {
+  fail('V39.8 does not cap variable-technique Body by available Energy.');
+}
+if (!/function itadoriBlueprint/.test(requestedRules) || !/Richiamo del Ricettacolo Perfetto/.test(requestedRules)) {
+  fail('V39.8 does not contain the requested Itadori blueprint.');
+}
+if (!/pugno_divergente,black_flash_itadori,manipolazione_sangue,freccia_itadori,richiamo_anima_sukuna,immortalita/.test(requestedRules)) {
+  fail('V39.8 Itadori technique audit is incomplete.');
+}
+
+const giocoCleanup = read('v396-jogo-ui-cleanup.js');
+if (!/#v27JogoTerrain\{display:none!important\}/.test(giocoCleanup)) fail('Jogo cleanup does not suppress the obsolete V27 terrain panel.');
+if (!/#v392JogoPanel\{display:none!important\}/.test(giocoCleanup)) fail('Jogo cleanup does not suppress the duplicated V39.2 panel.');
+if (!/#jogoPanel\.show #v37JogoPanel/.test(giocoCleanup)) fail('Jogo cleanup does not force the single active panel to remain visible.');
 
 if (failures.length) {
   console.error('\nSTATIC AUDIT FAILED');

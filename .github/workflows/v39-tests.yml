@@ -15,8 +15,12 @@ jobs:
         with:
           node-version: '20'
       - name: Syntax check
-        run: node --check v39-stable.js
+        run: |
+          node --check v39-stable.js
+          node --check v398-itadori-variable-rules.js
       - name: Rule tests
-        run: node tests/v39-rules.test.js
+        run: |
+          node tests/v39-rules.test.js
+          node tests/v398-rules.test.js
       - name: Browser smoke test
         run: node tests/v39-browser-smoke.test.js
