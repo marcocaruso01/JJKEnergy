@@ -1,9 +1,11 @@
-/* JJK Energy V39.6 - clean single-panel Jogo controls */
+/* JJK Energy V39.7 - clean single-panel Jogo controls */
 (function(root){
 'use strict';
 if(root.__JJK_V396_JOGO_UI__)return;
 root.__JJK_V396_JOGO_UI__=true;
-const VERSION='39.6.0';
+const VERSION='39.7.1';
+
+function read(name,fallback=null){try{const value=(0,eval)(name);return value===undefined?fallback:value;}catch(_){return root[name]===undefined?fallback:root[name];}}
 
 function ensureStyle(){
   if(document.getElementById('v396JogoStyle'))return;
@@ -17,8 +19,8 @@ function ensureStyle(){
     #v392JogoPanel{display:none!important}
 
     /* One compact, readable Jogo panel. */
-    #jogoPanel #v37JogoPanel{
-      display:block;
+    #jogoPanel.show #v37JogoPanel{
+      display:block!important;
       margin:12px 0 0!important;
       padding:14px!important;
       border:1px solid rgba(255,132,58,.48)!important;
@@ -26,6 +28,7 @@ function ensureStyle(){
       background:radial-gradient(circle at 100% 0,rgba(255,111,32,.18),transparent 42%),linear-gradient(145deg,rgba(35,16,9,.98),rgba(10,8,11,.98))!important;
       box-shadow:0 12px 28px rgba(0,0,0,.34),inset 0 0 22px rgba(255,107,35,.05)!important;
     }
+    #jogoPanel:not(.show) #v37JogoPanel{display:none!important}
     #jogoPanel #v37JogoPanel .v37-panel-title{
       margin:0 0 8px;
       color:#ffad68;
@@ -80,12 +83,19 @@ function ensureStyle(){
 
 function clean(){
   ensureStyle();
-  const jogoPanel=document.getElementById('jogoPanel');
+  const giocoPanel=document.getElementById('jogoPanel');
   const legacy=document.getElementById('v27JogoTerrain');
   const active=document.getElementById('v37JogoPanel');
+  const isJogo=read('currentId',null)==='jogo';
 
   /* Move the useful V37 controls outside the obsolete V27 wrapper. */
   if(jogoPanel&&active&&active.parentElement!==jogoPanel)jogoPanel.appendChild(active);
+
+  if(jogoPanel)jogoPanel.classList.toggle('show',isJogo);
+  if(active){
+    active.style.setProperty('display',isJogo?'block':'none','important');
+    active.setAttribute('aria-hidden',isJogo?'false':'true');
+  }
 
   if(legacy){
     legacy.setAttribute('aria-hidden','true');
@@ -115,7 +125,7 @@ function start(){
     observer._v396Timer=setTimeout(clean,20);
   });
   observer.observe(document.documentElement,{childList:true,subtree:true});
-  setInterval(clean,1400);
+  setInterval(clean,700);
   root.JJKV396={version:VERSION,clean};
   console.info('JJK Energy Jogo UI cleanup ready',VERSION);
 }
