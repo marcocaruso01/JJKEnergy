@@ -45,7 +45,7 @@ function boot(){installAudio();[
  ['v397-runtime-guards.js?v=20260727v397a','jjk-v397-runtime-guards'],
  ['v392-gameplay.js?v=20260726v392b','jjk-v392-gameplay'],
  ['v398-itadori-variable-rules.js?v=20260728v398a','jjk-v398-itadori-variable-rules'],
- ['v399-itadori-ui-progression.js?v=20260728v399a','jjk-v399-itadori-ui-progression'],
+ ['v399-itadori-ui-progression.js?v=20260728v399b','jjk-v399-itadori-ui-progression'],
  ['v396-jogo-ui-cleanup.js?v=20260727v397b','jjk-v397-jogo-ui']
 ].forEach(([src,key])=>loadScript(src,key));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
