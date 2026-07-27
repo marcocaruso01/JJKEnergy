@@ -15,4 +15,5 @@ assert.match(rules.thresholdUpgrade(12),/\+2 EM massima/);
 assert.match(rules.thresholdUpgrade(16),/\+1 Vita massima/);
 assert.match(rules.thresholdUpgrade(20),/\+1 Corpo permanente/);
 assert.deepEqual(rules.fingerBonuses(20),{body:5,life:4,energy:6});
+assert.equal(rules.audit().ok,true);
 console.log('V39.9.1 Itadori UI/progression tests passed');
