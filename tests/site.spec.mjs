@@ -6,9 +6,9 @@ async function openCleanPage(page) {
   await page.addInitScript(() => {
     try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
   });
-  await page.goto('/?audit=397', { waitUntil: 'domcontentloaded' });
+  await page.goto('/?audit=399', { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '#v21AuthGate{display:none!important;pointer-events:none!important}' });
-  await page.waitForFunction(() => window.JJKV395 && window.JJKV396 && window.JJKV397Runtime, null, { timeout: 15_000 });
+  await page.waitForFunction(() => window.JJKV395 && window.JJKV396 && window.JJKV397Runtime && window.JJKV398 && window.JJKV399, null, { timeout: 15_000 });
   await page.waitForTimeout(700);
 }
 
@@ -46,14 +46,18 @@ test('home loads without uncaught errors, missing local files or duplicate runti
     openCharacter: typeof window.openCharacter,
     techniqueFix: window.JJKV395?.version,
     giocoCleanup: window.JJKV396?.version,
-    runtimeGuard: window.JJKV397Runtime?.version
+    runtimeGuard: window.JJKV397Runtime?.version,
+    itadoriRules: window.JJKV398?.version,
+    itadoriUi: window.JJKV399?.version
   }));
   expect(globals).toEqual({
     showScreen: 'function',
     openCharacter: 'function',
     techniqueFix: '39.7.1',
     giocoCleanup: '39.7.1',
-    runtimeGuard: '39.7.0'
+    runtimeGuard: '39.7.0',
+    itadoriRules: '39.8.0',
+    itadoriUi: '39.9.0'
   });
 
   const duplicates = await page.evaluate(() => {
@@ -113,6 +117,49 @@ test('all characters render and every technique card keeps its exact key', async
     expect(result.audit?.ok, `${id} technique identity audit failed`).toBe(true);
   }
 
+  expect(runtime.localFailures).toEqual([]);
+  expect(runtime.pageErrors).toEqual([]);
+});
+
+test('Itadori uses one clean panel, announces finger upgrades and updates maximum Life', async ({ page }) => {
+  const runtime = observeRuntime(page);
+  await openCleanPage(page);
+  await page.evaluate(() => window.openCharacter('itadori', { silentStats: true }));
+  await page.waitForTimeout(350);
+
+  const sukunaButton = page.locator('[data-v392-sukuna]');
+  await expect(sukunaButton).toBeVisible();
+  for (let index = 0; index < 4; index += 1) {
+    await sukunaButton.click();
+    await page.waitForTimeout(140);
+  }
+
+  await expect(page.locator('#lifeMaxValue')).toHaveText('8');
+  await expect(page.locator('#itadoriChosoPanel')).toBeHidden();
+  await expect(page.locator('#v37BloodNowBtn')).toHaveClass(/v399-inline-blood/);
+
+  const state = await page.evaluate(() => {
+    const panel = document.getElementById('v392ItadoriPanel');
+    const blood = document.getElementById('v37BloodNowBtn');
+    const obsolete = document.getElementById('itadoriChosoPanel');
+    const notices = [...document.querySelectorAll('.v399-finger-toast')].map(element => element.textContent);
+    return {
+      panelExists: !!panel,
+      bloodParent: blood?.parentElement?.id || '',
+      obsoleteDisplay: obsolete ? getComputedStyle(obsolete).display : 'missing',
+      maxLife: document.getElementById('lifeMaxValue')?.textContent || '',
+      notices,
+      audit: window.JJKV399.audit()
+    };
+  });
+
+  expect(state.panelExists).toBe(true);
+  expect(state.bloodParent).toBe('v392ItadoriPanel');
+  expect(['none', 'missing']).toContain(state.obsoleteDisplay);
+  expect(state.maxLife).toBe('8');
+  expect(state.notices.some(text => text.includes('4 Dita raggiunte'))).toBe(true);
+  expect(state.notices.some(text => text.includes('20 Dita raggiunte'))).toBe(true);
+  expect(state.audit?.ok).toBe(true);
   expect(runtime.localFailures).toEqual([]);
   expect(runtime.pageErrors).toEqual([]);
 });
