@@ -6,7 +6,7 @@ async function openCleanPage(page) {
   await page.addInitScript(() => {
     try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
   });
-  await page.goto('/?audit=399', { waitUntil: 'domcontentloaded' });
+  await page.goto('/?audit=3991', { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '#v21AuthGate{display:none!important;pointer-events:none!important}' });
   await page.waitForFunction(() => window.JJKV395 && window.JJKV396 && window.JJKV397Runtime && window.__JJK_V398_INSTALLED__ && window.__JJK_V399_INSTALLED__, null, { timeout: 15_000 });
   await page.waitForTimeout(700);
@@ -127,12 +127,19 @@ test('Itadori uses one clean panel, announces finger upgrades and updates maximu
   await page.evaluate(() => window.openCharacter('itadori', { silentStats: true }));
   await page.waitForTimeout(350);
 
+  const resourcesTab = page.getByRole('button', { name: /Risorse/ });
+  if (await resourcesTab.isVisible()) {
+    await resourcesTab.click();
+    await page.waitForTimeout(220);
+  }
+
   const sukunaButton = page.locator('[data-v392-sukuna]');
   await expect(sukunaButton).toBeVisible();
   for (let index = 0; index < 4; index += 1) {
     await sukunaButton.click();
-    await page.waitForTimeout(140);
+    await page.waitForTimeout(160);
   }
+  await page.waitForTimeout(700);
 
   await expect(page.locator('#lifeMaxValue')).toHaveText('8');
   await expect(page.locator('#itadoriChosoPanel')).toBeHidden();
