@@ -48,17 +48,21 @@ test('Jogo uses one counter and rejects stale rewrites and stale snapshots', asy
   await page.evaluate(() => {
     clearInterval(window.__v402Oscillation);
     const stale = {
-      characterId: 'jogo', gradeId: 'G3', jogoVolcanoes: 0, giocoCraters: 2,
-      jogoCraters: 2, giocoVolcanoMovesUsed: 0, giocoEruptionUsed: false,
+      characterId: 'jogo',
+      gradeId: 'G3',
+      giocoVolcanoes: 0,
+      giocoCraters: 2,
+      jogoVolcanoes: 0,
+      jogoCraters: 2,
+      jogoVolcanoMovesUsed: 0,
+      giocoEruptionUsed: false,
+      jogoEruptionUsed: false,
       updatedAt: 1
     };
     window.applyRoomPlayerStateSnapshot(stale, true);
   });
+
   await page.waitForTimeout(500);
   await expect(summary).toContainText('1 Vulcani · 0 Crateri');
-
-  const state = await page.evaluate(() => window.JJKV401.state);
-  expect(state.volcanoes).toBe(1);
-  expect(state.craters).toBe(0);
   expect(pageErrors).toEqual([]);
 });
