@@ -172,19 +172,19 @@ test('Itadori uses one clean panel, announces finger upgrades and updates maximu
   expect(runtime.pageErrors).toEqual([]);
 });
 
-test('Jogo displays one compact control system and hides obsolete panels', async ({ page }) => {
+test('Jogo displays only the V40.2 control system and hides obsolete panels', async ({ page }) => {
   const runtime = observeRuntime(page);
   await openCleanPage(page);
   await page.evaluate(() => window.openCharacter('jogo', { silentStats: true }));
   await setSpecialGrade(page);
-  await page.waitForTimeout(350);
-  await page.evaluate(() => window.JJKV396.clean());
+  await page.waitForFunction(() => window.__JJK_V402_INSTALLED__ && document.getElementById('v402JogoPanel'));
 
   const state = await page.evaluate(() => {
     const legacy = document.getElementById('v27JogoTerrain');
-    const duplicate = document.getElementById('v392JogoPanel');
-    const active = document.getElementById('v37JogoPanel');
-    const visiblePanels = [legacy, duplicate, active].filter(element => element && getComputedStyle(element).display !== 'none');
+    const v37 = document.getElementById('v37JogoPanel');
+    const v392 = document.getElementById('v392JogoPanel');
+    const active = document.getElementById('v402JogoPanel');
+    const visiblePanels = [legacy, v37, v392, active].filter(element => element && getComputedStyle(element).display !== 'none');
     const disabledVisible = active ? [...active.querySelectorAll('button:disabled')].filter(button => getComputedStyle(button).display !== 'none').length : -1;
     return {
       activeExists: !!active,
@@ -192,7 +192,8 @@ test('Jogo displays one compact control system and hides obsolete panels', async
       parentShown: document.getElementById('jogoPanel')?.classList.contains('show') || false,
       visiblePanelIds: visiblePanels.map(element => element.id),
       legacyDisplay: legacy ? getComputedStyle(legacy).display : 'missing',
-      duplicateDisplay: duplicate ? getComputedStyle(duplicate).display : 'missing',
+      v37Display: v37 ? getComputedStyle(v37).display : 'missing',
+      v392Display: v392 ? getComputedStyle(v392).display : 'missing',
       disabledVisible
     };
   });
@@ -200,9 +201,10 @@ test('Jogo displays one compact control system and hides obsolete panels', async
   expect(state.activeExists).toBe(true);
   expect(state.activeParent).toBe('jogoPanel');
   expect(state.parentShown).toBe(true);
-  expect(state.visiblePanelIds).toEqual(['v37JogoPanel']);
+  expect(state.visiblePanelIds).toEqual(['v402JogoPanel']);
   expect(state.legacyDisplay).toBe('none');
-  expect(['none', 'missing']).toContain(state.duplicateDisplay);
+  expect(['none', 'missing']).toContain(state.v37Display);
+  expect(['none', 'missing']).toContain(state.v392Display);
   expect(state.disabledVisible).toBe(0);
   expect(runtime.localFailures).toEqual([]);
   expect(runtime.pageErrors).toEqual([]);
