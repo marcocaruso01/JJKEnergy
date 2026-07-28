@@ -218,7 +218,7 @@ function bind(){
   ensureStyle();wrapUseTechnique();wrapSnapshot();wrapBuildState();wrapOpenCharacter();installEvents();renderStableCounter(false);
 }
 function audit(){
-  const checks={version:VERSION,separateSummary:!!document.getElementById('v401JogoSummary')||cid()!=='jogo,stableState:typeof stable.volcanoes==='number'&&typeof stable.craters==='number'};
+  const checks={version:VERSION,separateSummary:!!document.getElementById('v401JogoSummary')||cid()!=='jogo',stableState:typeof stable.volcanoes==='number'&&typeof stable.craters==='number'};
   checks.ok=Object.entries(checks).filter(([key])=>!['version','ok'].includes(key)).every(([,value])=>value===true);
   root.JJKV401Audit=checks;return checks;
 }
