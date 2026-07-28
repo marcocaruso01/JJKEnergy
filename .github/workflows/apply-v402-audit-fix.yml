@@ -1,0 +1,42 @@
+name: Apply V40.2 audit selector fix
+
+on:
+  push:
+    branches: [agent/v402-jogo-single-state]
+    paths:
+      - '.github/workflows/apply-v402-audit-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v402-jogo-single-state
+          fetch-depth: 0
+      - name: Update V40.2 audit selector
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('scripts/static-audit.mjs')
+          text = path.read_text(encoding='utf-8')
+          old = r"/#v37JogoPanel,#v392JogoPanel,#v401JogoSummary\{display:none!important\}/"
+          new = r"/#jogoPanel\.show #v37JogoPanel,#jogoPanel\.show #v392JogoPanel,#jogoPanel\.show #v401JogoSummary\{display:none!important\}/"
+          if old not in text:
+              raise SystemExit('Old V40.2 selector audit not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          Path('.github/workflows/apply-v402-audit-fix.yml').unlink()
+          PY
+      - name: Commit audit correction
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/static-audit.mjs .github/workflows/apply-v402-audit-fix.yml
+          git commit -m "Fix V40.2 Jogo audit selector"
+          git push origin HEAD:agent/v402-jogo-single-state
