@@ -2,6 +2,7 @@
 (function(root,factory){
   const api=factory(root||globalThis);
   if(typeof module==='object'&&module.exports)module.exports=api;
+  if(root){root.JJKV401=api;root.JJKV402=api;}
   if(root&&root.document)api.install();
 })(typeof window!=='undefined'?window:globalThis,function(root){
 'use strict';
@@ -70,7 +71,7 @@ function saveAndRender(){try{getfn('saveState')?.();}catch(_){}try{getfn('render
 function ensureStyle(){
   if(document.getElementById('v402JogoStyle'))return;
   const style=document.createElement('style');style.id='v402JogoStyle';style.textContent=`
-    #v37JogoPanel,#v392JogoPanel,#v401JogoSummary{display:none!important}
+    #jogoPanel.show #v37JogoPanel,#jogoPanel.show #v392JogoPanel,#jogoPanel.show #v401JogoSummary{display:none!important}
     #jogoPanel.show #v402JogoPanel{display:block!important}
     #v402JogoPanel{display:none;margin:12px 0 0;padding:14px;border:1px solid rgba(255,132,58,.48);border-radius:18px;background:linear-gradient(145deg,rgba(35,16,9,.98),rgba(10,8,11,.98))}
     #v402JogoPanel .v402-title{margin:0 0 8px;color:#ffad68;font-size:.82rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
