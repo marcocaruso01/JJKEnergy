@@ -1,0 +1,120 @@
+name: Align V40.2 Jogo tests
+
+on:
+  push:
+    branches: [agent/v402-jogo-single-state]
+    paths:
+      - '.github/workflows/apply-v402-test-alignment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v402-jogo-single-state
+          fetch-depth: 0
+      - name: Update obsolete Jogo expectations
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          site = Path('tests/site.spec.mjs')
+          text = site.read_text(encoding='utf-8')
+          pattern = r"test\('Jogo displays one compact control system and hides obsolete panels'.*?\n\}\);\n\ntest\('mobile pages"
+          replacement = """test('Jogo displays only the V40.2 control system and hides obsolete panels', async ({ page }) => {
+  const runtime = observeRuntime(page);
+  await openCleanPage(page);
+  await page.evaluate(() => window.openCharacter('jogo', { silentStats: true }));
+  await setSpecialGrade(page);
+  await page.waitForFunction(() => window.__JJK_V402_INSTALLED__ && document.getElementById('v402JogoPanel'));
+
+  const state = await page.evaluate(() => {
+    const legacy = document.getElementById('v27JogoTerrain');
+    const v37 = document.getElementById('v37JogoPanel');
+    const v392 = document.getElementById('v392JogoPanel');
+    const active = document.getElementById('v402JogoPanel');
+    const visiblePanels = [legacy, v37, v392, active].filter(element => element && getComputedStyle(element).display !== 'none');
+    const disabledVisible = active ? [...active.querySelectorAll('button:disabled')].filter(button => getComputedStyle(button).display !== 'none').length : -1;
+    return {
+      activeExists: !!active,
+      activeParent: active?.parentElement?.id || '',
+      parentShown: document.getElementById('jogoPanel')?.classList.contains('show') || false,
+      visiblePanelIds: visiblePanels.map(element => element.id),
+      legacyDisplay: legacy ? getComputedStyle(legacy).display : 'missing',
+      v37Display: v37 ? getComputedStyle(v37).display : 'missing',
+      v392Display: v392 ? getComputedStyle(v392).display : 'missing',
+      disabledVisible
+    };
+  });
+
+  expect(state.activeExists).toBe(true);
+  expect(state.activeParent).toBe('jogoPanel');
+  expect(state.parentShown).toBe(true);
+  expect(state.visiblePanelIds).toEqual(['v402JogoPanel']);
+  expect(state.legacyDisplay).toBe('none');
+  expect(['none', 'missing']).toContain(state.v37Display);
+  expect(['none', 'missing']).toContain(state.v392Display);
+  expect(state.disabledVisible).toBe(0);
+  expect(runtime.localFailures).toEqual([]);
+  expect(runtime.pageErrors).toEqual([]);
+});
+
+test('mobile pages"""
+          updated, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit(f'site.spec Jogo block matches: {count}')
+          site.write_text(updated, encoding='utf-8')
+
+          v400 = Path('tests/v400-site.spec.mjs')
+          text = v400.read_text(encoding='utf-8')
+          pattern = r"test\('Jogo volcano and crater counters refresh automatically from gameplay state'.*?\n\}\);\s*$"
+          replacement = """test('Jogo V40.2 counter changes only through authoritative gameplay actions', async ({ page }) => {
+  const runtime = observeRuntime(page);
+  await openCleanPage(page);
+  await page.waitForFunction(() => window.__JJK_V402_INSTALLED__);
+  await page.evaluate(() => window.openCharacter('jogo', { silentStats: true }));
+  await page.waitForTimeout(400);
+
+  await page.evaluate(() => {
+    (0, eval)('gradeId = "G3"');
+    (0, eval)('energy = 100');
+    window.renderAll();
+    window.useTechnique('vulcani');
+  });
+
+  const summary = page.locator('#v402JogoSummary');
+  await expect(summary).toContainText('1 Vulcani · 0 Crateri');
+
+  await page.evaluate(() => {
+    (0, eval)('jogoVolcanoes = 3');
+    (0, eval)('jogoCraters = 4');
+    window.renderAll();
+  });
+  await page.waitForTimeout(600);
+
+  await expect(summary).toContainText('1 Vulcani · 0 Crateri');
+  expect(runtime.localFailures).toEqual([]);
+  expect(runtime.pageErrors).toEqual([]);
+});
+"""
+          updated, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit(f'v400-site Jogo block matches: {count}')
+          v400.write_text(updated, encoding='utf-8')
+
+          Path('.github/workflows/apply-v402-test-alignment.yml').unlink()
+          PY
+      - name: Commit test alignment
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/site.spec.mjs tests/v400-site.spec.mjs .github/workflows/apply-v402-test-alignment.yml
+          git commit -m "Align Jogo tests with V40.2 single state"
+          git push origin HEAD:agent/v402-jogo-single-state
