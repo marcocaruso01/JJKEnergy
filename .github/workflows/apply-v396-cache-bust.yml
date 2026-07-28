@@ -1,4 +1,4 @@
-name: Apply V39.9.1 cache bust
+name: Apply V40 cache bust
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
           text = path.read_text(encoding='utf-8')
           updated = re.sub(
               r'sfx\.js\?v=[^"\']+',
-              'sfx.js?v=20260728s399b',
+              'sfx.js?v=20260728s400a',
               text,
               count=1,
           )
@@ -46,5 +46,5 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Bust cache for V39.9.1 Itadori controls"
+          git commit -m "Bust cache for V40 counter and Domain fixes"
           git push

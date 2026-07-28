@@ -1,6 +1,6 @@
 {
   "name": "jjk-energy-site",
-  "version": "39.9.1",
+  "version": "40.0.0",
   "private": true,
   "scripts": {
     "audit:static": "node scripts/static-audit.mjs",
