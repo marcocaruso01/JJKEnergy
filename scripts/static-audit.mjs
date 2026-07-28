@@ -127,7 +127,7 @@ const v402 = read('v401-jogo-counter-stability.js');
 if (!/const state=/.test(v402) || !/function syncGlobals/.test(v402) || !/function commit/.test(v402)) {
   fail('V40.2 does not maintain a single authoritative Jogo state.');
 }
-if (!/#v37JogoPanel,#v392JogoPanel,#v401JogoSummary\{display:none!important\}/.test(v402) || !/v402JogoPanel/.test(v402)) {
+if (!/#jogoPanel\.show #v37JogoPanel,#jogoPanel\.show #v392JogoPanel,#jogoPanel\.show #v401JogoSummary\{display:none!important\}/.test(v402) || !/v402JogoPanel/.test(v402)) {
   fail('V40.2 does not remove the obsolete competing Jogo panels.');
 }
 if (!/function wrapSnapshot/.test(v402) || !/function wrapBuildState/.test(v402) || !/function wrapUseTechnique/.test(v402)) {
