@@ -45,25 +45,31 @@ test('Itadori finger counter does not jump during background refreshes', async (
   expect(runtime.pageErrors).toEqual([]);
 });
 
-test('Jogo volcano and crater counters refresh automatically from gameplay state', async ({ page }) => {
+test('Jogo V40.2 counter changes only through authoritative gameplay actions', async ({ page }) => {
   const runtime = observeRuntime(page);
   await openCleanPage(page);
+  await page.waitForFunction(() => window.__JJK_V402_INSTALLED__);
   await page.evaluate(() => window.openCharacter('jogo', { silentStats: true }));
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(400);
 
   await page.evaluate(() => {
-    (0, eval)('jogoVolcanoes = 2');
-    (0, eval)('jogoCraters = 3');
+    (0, eval)('gradeId = "G3"');
+    (0, eval)('energy = 100');
+    window.renderAll();
+    window.useTechnique('vulcani');
   });
 
-  await expect(page.locator('#v37JogoSummary')).toContainText('2 Vulcani · 3 Crateri');
+  const summary = page.locator('#v402JogoSummary');
+  await expect(summary).toContainText('1 Vulcani · 0 Crateri');
 
   await page.evaluate(() => {
-    (0, eval)('jogoVolcanoes = 1');
+    (0, eval)('jogoVolcanoes = 3');
     (0, eval)('jogoCraters = 4');
+    window.renderAll();
   });
+  await page.waitForTimeout(600);
 
-  await expect(page.locator('#v37JogoSummary')).toContainText('1 Vulcani · 4 Crateri');
+  await expect(summary).toContainText('1 Vulcani · 0 Crateri');
   expect(runtime.localFailures).toEqual([]);
   expect(runtime.pageErrors).toEqual([]);
 });

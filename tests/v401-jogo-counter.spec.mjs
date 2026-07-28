@@ -4,12 +4,12 @@ async function openCleanPage(page) {
   await page.addInitScript(() => {
     try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
   });
-  await page.goto('/?audit=401', { waitUntil: 'domcontentloaded' });
+  await page.goto('/?audit=402', { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '#v21AuthGate{display:none!important;pointer-events:none!important}' });
-  await page.waitForFunction(() => window.__JJK_V401_INSTALLED__ && window.JJKV401Audit?.ok === true, null, { timeout: 15_000 });
+  await page.waitForFunction(() => window.__JJK_V402_INSTALLED__ && window.JJKV402Audit?.ok === true, null, { timeout: 15_000 });
 }
 
-test('Jogo visible counter ignores stale 0-1-2 rewrites', async ({ page }) => {
+test('Jogo uses one counter and rejects stale rewrites and stale snapshots', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
 
@@ -24,27 +24,45 @@ test('Jogo visible counter ignores stale 0-1-2 rewrites', async ({ page }) => {
     window.useTechnique('vulcani');
   });
 
-  const stableSummary = page.locator('#v401JogoSummary');
-  await expect(stableSummary).toContainText('1 Vulcani · 0 Crateri');
-  await expect(page.locator('#v37JogoSummary')).toBeHidden();
+  const summary = page.locator('#v402JogoSummary');
+  await expect(summary).toContainText('1 Vulcani · 0 Crateri');
+  await expect(page.locator('#v37JogoPanel')).toBeHidden();
+  await expect(page.locator('#v392JogoPanel')).toBeHidden();
 
   await page.evaluate(() => {
     let index = 0;
     const values = [0, 1, 2, 0, 2, 1];
-    window.__v401Oscillation = setInterval(() => {
+    window.__v402Oscillation = setInterval(() => {
       const value = values[index++ % values.length];
       (0, eval)(`jogoVolcanoes = ${value}`);
       (0, eval)(`jogoCraters = ${value}`);
+      window.renderAll();
     }, 70);
   });
 
   for (let sample = 0; sample < 8; sample += 1) {
     await page.waitForTimeout(160);
-    await expect(stableSummary).toContainText('1 Vulcani · 0 Crateri');
+    await expect(summary).toContainText('1 Vulcani · 0 Crateri');
   }
 
-  await page.evaluate(() => clearInterval(window.__v401Oscillation));
-  await page.waitForTimeout(600);
-  await expect(stableSummary).toContainText('1 Vulcani · 0 Crateri');
+  await page.evaluate(() => {
+    clearInterval(window.__v402Oscillation);
+    const stale = {
+      characterId: 'jogo',
+      gradeId: 'G3',
+      giocoVolcanoes: 0,
+      giocoCraters: 2,
+      jogoVolcanoes: 0,
+      jogoCraters: 2,
+      jogoVolcanoMovesUsed: 0,
+      giocoEruptionUsed: false,
+      jogoEruptionUsed: false,
+      updatedAt: 1
+    };
+    window.applyRoomPlayerStateSnapshot(stale, true);
+  });
+
+  await page.waitForTimeout(500);
+  await expect(summary).toContainText('1 Vulcani · 0 Crateri');
   expect(pageErrors).toEqual([]);
 });

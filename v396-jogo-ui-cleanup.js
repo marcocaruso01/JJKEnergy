@@ -87,14 +87,16 @@ function clean(){
   const legacy=document.getElementById('v27JogoTerrain');
   const active=document.getElementById('v37JogoPanel');
   const isJogo=read('currentId',null)==='jogo';
+  const v402OwnsPanel=!!root.__JJK_V402_INSTALLED__;
 
   /* Move the useful V37 controls outside the obsolete V27 wrapper. */
-  if(jogoPanel&&active&&active.parentElement!==jogoPanel)jogoPanel.appendChild(active);
+  if(giocoPanel&&active&&active.parentElement!==jogoPanel)jogoPanel.appendChild(active);
 
-  if(jogoPanel)jogoPanel.classList.toggle('show',isJogo);
+  if(giocoPanel)jogoPanel.classList.toggle('show',isJogo);
   if(active){
-    active.style.setProperty('display',isJogo?'block':'none','important');
-    active.setAttribute('aria-hidden',isJogo?'false':'true');
+    const showLegacy=isJogo&&!v402OwnsPanel;
+    active.style.setProperty('display',showLegacy?'block':'none','important');
+    active.setAttribute('aria-hidden',showLegacy?'false':'true');
   }
 
   if(legacy){

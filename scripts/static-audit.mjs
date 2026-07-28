@@ -59,8 +59,8 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a)/.test(index)) {
-  fail('index.html does not use an approved V39.7-V40.1 sfx cache key.');
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a)/.test(index)) {
+  fail('index.html does not use an approved V39.7-V40.2 sfx cache key.');
 }
 
 const sfx = read('sfx.js');
@@ -70,7 +70,7 @@ if (!/v398-itadori-variable-rules\.js\?v=20260728v398a/.test(sfx)) fail('sfx.js 
 if (!/v399-itadori-ui-progression\.js\?v=20260728v399b/.test(sfx)) fail('sfx.js does not load the V39.9.1 Itadori UI, controls and progression fixes.');
 if (!/v396-jogo-ui-cleanup\.js\?v=20260727v397b/.test(sfx)) fail('sfx.js does not load the latest Jogo UI cleanup.');
 if (!/v400-counter-domain-fixes\.js\?v=20260728v400a/.test(sfx)) fail('sfx.js does not load the V40 counter and Domain fixes.');
-if (!/v401-jogo-counter-stability\.js\?v=20260728v401a/.test(sfx)) fail('sfx.js does not load the V40.1 stable Jogo counter.');
+if (!/v401-jogo-counter-stability\.js\?v=20260728v402a/.test(sfx)) fail('sfx.js does not load the V40.2 single Jogo state.');
 if (/v365-late-technique-ui\.js|v393-stability\.js/.test(sfx)) fail('sfx.js still loads an obsolete conflicting patch.');
 
 const exactTechniqueFix = read('v394-technique-fix.js');
@@ -123,15 +123,18 @@ if (!/function updateJogoCounter/.test(v400) || !/v37JogoSummary/.test(v400)) {
   fail('V40 does not update the visible Jogo counters automatically.');
 }
 
-const v401 = read('v401-jogo-counter-stability.js');
-if (!/const stable=/.test(v401) || !/function enforceGlobals/.test(v401)) {
-  fail('V40.1 does not maintain one authoritative Jogo counter state.');
+const v402 = read('v401-jogo-counter-stability.js');
+if (!/const state=/.test(v402) || !/function syncGlobals/.test(v402) || !/function commit/.test(v402)) {
+  fail('V40.2 does not maintain a single authoritative Jogo state.');
 }
-if (!/#v37JogoSummary\{display:none!important\}/.test(v401) || !/v401JogoSummary/.test(v401)) {
-  fail('V40.1 does not isolate the visible Jogo counter from obsolete periodic rewrites.');
+if (!/#jogoPanel\.show #v37JogoPanel,#jogoPanel\.show #v392JogoPanel,#jogoPanel\.show #v401JogoSummary\{display:none!important\}/.test(v402) || !/v402JogoPanel/.test(v402)) {
+  fail('V40.2 does not remove the obsolete competing Jogo panels.');
 }
-if (!/function wrapSnapshot/.test(v401) || !/function wrapBuildState/.test(v401)) {
-  fail('V40.1 does not synchronize the authoritative Jogo counter with multiplayer state.');
+if (!/function wrapSnapshot/.test(v402) || !/function wrapBuildState/.test(v402) || !/function wrapUseTechnique/.test(v402)) {
+  fail('V40.2 does not synchronize local actions and multiplayer through its authoritative state.');
+}
+if (/captureLocalChange|scheduleCapture/.test(v402)) {
+  fail('V40.2 still accepts arbitrary periodic global rewrites.');
 }
 
 const giocoCleanup = read('v396-jogo-ui-cleanup.js');
