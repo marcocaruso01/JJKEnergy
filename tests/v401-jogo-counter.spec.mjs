@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 
+// Validation branch: the functional code is already published on main.
 async function openCleanPage(page) {
   await page.addInitScript(() => {
     try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
