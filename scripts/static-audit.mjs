@@ -59,8 +59,8 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab])/.test(index)) {
-  fail('index.html does not use an approved V39.7/V39.8/V39.9 sfx cache key.');
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a)/.test(index)) {
+  fail('index.html does not use an approved V39.7-V40 sfx cache key.');
 }
 
 const sfx = read('sfx.js');
@@ -69,6 +69,7 @@ if (!/v397-runtime-guards\.js\?v=20260727v397a/.test(sfx)) fail('sfx.js does not
 if (!/v398-itadori-variable-rules\.js\?v=20260728v398a/.test(sfx)) fail('sfx.js does not load the V39.8 Itadori and variable-technique rules.');
 if (!/v399-itadori-ui-progression\.js\?v=20260728v399b/.test(sfx)) fail('sfx.js does not load the V39.9.1 Itadori UI, controls and progression fixes.');
 if (!/v396-jogo-ui-cleanup\.js\?v=20260727v397b/.test(sfx)) fail('sfx.js does not load the latest Jogo UI cleanup.');
+if (!/v400-counter-domain-fixes\.js\?v=20260728v400a/.test(sfx)) fail('sfx.js does not load the V40 counter and Domain fixes.');
 if (/v365-late-technique-ui\.js|v393-stability\.js/.test(sfx)) fail('sfx.js still loads an obsolete conflicting patch.');
 
 const exactTechniqueFix = read('v394-technique-fix.js');
@@ -108,6 +109,17 @@ if (!/itadoriChosoPanel\{display:none!important\}/.test(itadoriUi) || !/v399-inl
 }
 if (!/function awardFingers/.test(itadoriUi) || !/data-v392-sukuna/.test(itadoriUi) || !/data-v392-monster/.test(itadoriUi)) {
   fail('V39.9.1 does not bind the Itadori finger controls.');
+}
+
+const v400 = read('v400-counter-domain-fixes.js');
+if (!/function resolveSoulDomain/.test(v400) || !/slashRoll\+normal\[0\]\+normal\[1\]/.test(v400)) {
+  fail('V40 does not charge the Itadori Domain for d24 + both d6 results.');
+}
+if (!/v37ItadoriPanel/.test(v400) || !/overflow-anchor:none/.test(v400)) {
+  fail('V40 does not stabilize the Itadori finger counter layout.');
+}
+if (!/function updateJogoCounter/.test(v400) || !/v37JogoSummary/.test(v400)) {
+  fail('V40 does not update the visible Jogo counters automatically.');
 }
 
 const giocoCleanup = read('v396-jogo-ui-cleanup.js');
