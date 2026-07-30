@@ -59,9 +59,13 @@ test('Android numeric input is not overwritten while the user is typing', async 
   await openCleanPage(page);
 
   const value = await page.evaluate(async () => {
+    const drawer = document.getElementById('mobileV24GMDrawer');
     const input = document.getElementById('mobileV24GMExact');
-    if (!input) throw new Error('mobileV24GMExact missing');
+    if (!drawer || !input) throw new Error('mobile resource drawer missing');
+    drawer.classList.add('show');
+    drawer.setAttribute('aria-hidden', 'false');
     input.focus();
+    if (document.activeElement !== input) throw new Error('numeric input did not receive focus');
     input.value = '17';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.value = '2';
