@@ -59,8 +59,8 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a)/.test(index)) {
-  fail('index.html does not use an approved V39.7-V40.2 sfx cache key.');
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a)/.test(index)) {
+  fail('index.html does not use an approved V39.7-V40.3 sfx cache key.');
 }
 
 const sfx = read('sfx.js');
@@ -71,6 +71,7 @@ if (!/v399-itadori-ui-progression\.js\?v=20260728v399b/.test(sfx)) fail('sfx.js 
 if (!/v396-jogo-ui-cleanup\.js\?v=20260727v397b/.test(sfx)) fail('sfx.js does not load the latest Jogo UI cleanup.');
 if (!/v400-counter-domain-fixes\.js\?v=20260728v400a/.test(sfx)) fail('sfx.js does not load the V40 counter and Domain fixes.');
 if (!/v401-jogo-counter-stability\.js\?v=20260728v402a/.test(sfx)) fail('sfx.js does not load the V40.2 single Jogo state.');
+if (!/v403-performance-android\.js\?v=20260730v403a/.test(sfx)) fail('sfx.js does not load the V40.3 performance and Android fixes.');
 if (/v365-late-technique-ui\.js|v393-stability\.js/.test(sfx)) fail('sfx.js still loads an obsolete conflicting patch.');
 
 const exactTechniqueFix = read('v394-technique-fix.js');
@@ -135,6 +136,20 @@ if (!/function wrapSnapshot/.test(v402) || !/function wrapBuildState/.test(v402)
 }
 if (/captureLocalChange|scheduleCapture/.test(v402)) {
   fail('V40.2 still accepts arbitrary periodic global rewrites.');
+}
+
+const v403 = read('v403-performance-android.js');
+if (!/function wrapGmRender/.test(v403) || !/__v403Performance/.test(v403)) {
+  fail('V40.3 does not throttle and deduplicate expensive GM rendering.');
+}
+if (!/function enqueueResourceDelta/.test(v403) || !/const pending=new Map/.test(v403)) {
+  fail('V40.3 does not queue rapid resource taps.');
+}
+if (!/function editingLoop/.test(v403) || !/mobileV24GMExact/.test(v403)) {
+  fail('V40.3 does not protect Android numeric input while typing.');
+}
+if (!/touch-action:manipulation/.test(v403) || !/font-size:16px!important/.test(v403)) {
+  fail('V40.3 is missing Android touch and keyboard safeguards.');
 }
 
 const giocoCleanup = read('v396-jogo-ui-cleanup.js');
