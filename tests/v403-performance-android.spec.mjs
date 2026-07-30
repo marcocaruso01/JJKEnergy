@@ -6,7 +6,7 @@ async function openCleanPage(page) {
   });
   await page.goto('/?audit=403', { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '#v21AuthGate{display:none!important;pointer-events:none!important}' });
-  await page.waitForFunction(() => window.__JJK_V403_INSTALLED__ && window.JJKV403Audit?.ok === true, null, { timeout: 15_000 });
+  await page.waitForFunction(() => window.__JJK_V403_INSTALLED__ && window.JJKV403Audit?.ok === true && window.JJKV403PlayerQueue, null, { timeout: 15_000 });
 }
 
 test('rapid mobile resource taps are combined instead of being lost', async ({ page }) => {
@@ -34,6 +34,27 @@ test('rapid mobile resource taps are combined instead of being lost', async ({ p
   expect(result.energy).toBe(11);
 });
 
+test('rapid player EXP taps survive DOM rebuilding', async ({ page }) => {
+  await openCleanPage(page);
+
+  const calls = await page.evaluate(async () => {
+    const values = [];
+    window.gainExp = delta => values.push(delta);
+    const button = document.createElement('button');
+    button.setAttribute('onclick', 'gainExp(1)');
+    button.textContent = '+1 EXP';
+    document.body.appendChild(button);
+    button.click();
+    button.click();
+    button.click();
+    await new Promise(resolve => setTimeout(resolve, 400));
+    button.remove();
+    return values;
+  });
+
+  expect(calls).toEqual([3]);
+});
+
 test('Android numeric input is not overwritten while the user is typing', async ({ page }) => {
   await openCleanPage(page);
 
@@ -57,11 +78,13 @@ test('V40.3 installs touch-safe controls and throttled GM rendering', async ({ p
     audit: window.JJKV403Audit,
     wrapped: !!window.renderGMDashboard?.__v403Performance,
     style: !!document.getElementById('v403PerformanceStyle'),
-    inputEvents: document.documentElement.dataset.v403InputEvents
+    inputEvents: document.documentElement.dataset.v403InputEvents,
+    playerQueue: window.JJKV403PlayerQueue?.version
   }));
 
   expect(state.audit?.ok).toBe(true);
   expect(state.wrapped).toBe(true);
   expect(state.style).toBe(true);
   expect(state.inputEvents).toBe('1');
+  expect(state.playerQueue).toBe('40.3.0');
 });
