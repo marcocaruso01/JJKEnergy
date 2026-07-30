@@ -3,7 +3,7 @@
 'use strict';
 if(root.__JJK_V396_JOGO_UI__)return;
 root.__JJK_V396_JOGO_UI__=true;
-const VERSION='39.7.1';
+const VERSION='39.7.2';
 
 function read(name,fallback=null){try{const value=(0,eval)(name);return value===undefined?fallback:value;}catch(_){return root[name]===undefined?fallback:root[name];}}
 
@@ -12,13 +12,8 @@ function ensureStyle(){
   const style=document.createElement('style');
   style.id='v396JogoStyle';
   style.textContent=`
-    /* Old V27 manual terrain buttons are obsolete. */
     #v27JogoTerrain{display:none!important}
-
-    /* V39.2 summary duplicated the active V37 controls. */
     #v392JogoPanel{display:none!important}
-
-    /* One compact, readable Jogo panel. */
     #jogoPanel.show #v37JogoPanel{
       display:block!important;
       margin:12px 0 0!important;
@@ -81,7 +76,8 @@ function ensureStyle(){
   document.head.appendChild(style);
 }
 
-function clean(){
+function clean(force=false){
+  if(document.hidden&&!force)return;
   ensureStyle();
   const giocoPanel=document.getElementById('jogoPanel');
   const legacy=document.getElementById('v27JogoTerrain');
@@ -89,45 +85,36 @@ function clean(){
   const isJogo=read('currentId',null)==='jogo';
   const v402OwnsPanel=!!root.__JJK_V402_INSTALLED__;
 
-  /* Move the useful V37 controls outside the obsolete V27 wrapper. */
-  if(giocoPanel&&active&&active.parentElement!==jogoPanel)jogoPanel.appendChild(active);
-
-  if(giocoPanel)jogoPanel.classList.toggle('show',isJogo);
+  if(giocoPanel&&active&&active.parentElement!==jogoPanel)giocoPanel.appendChild(active);
+  if(giocoPanel)giocoPanel.classList.toggle('show',isJogo);
   if(active){
     const showLegacy=isJogo&&!v402OwnsPanel;
-    active.style.setProperty('display',showLegacy?'block':'none','important');
+    const nextDisplay=showLegacy?'block':'none';
+    if(active.style.getPropertyValue('display')!==nextDisplay||active.style.getPropertyPriority('display')!=='important')active.style.setProperty('display',nextDisplay,'important');
     active.setAttribute('aria-hidden',showLegacy?'false':'true');
   }
-
-  if(legacy){
-    legacy.setAttribute('aria-hidden','true');
-    legacy.hidden=true;
-  }
-
+  if(legacy){legacy.setAttribute('aria-hidden','true');legacy.hidden=true;}
   if(active){
     let empty=active.querySelector('.v396-jogo-empty');
-    if(!empty){
-      empty=document.createElement('div');
-      empty.className='v396-jogo-empty';
-      empty.textContent='Nessuna azione speciale disponibile in questo momento.';
-      active.appendChild(empty);
-    }
+    if(!empty){empty=document.createElement('div');empty.className='v396-jogo-empty';empty.textContent='Nessuna azione speciale disponibile in questo momento.';active.appendChild(empty);}
     const buttons=[...active.querySelectorAll('.v37-actions button')];
     active.classList.toggle('v396-no-actions',buttons.length>0&&buttons.every(button=>button.disabled));
   }
 }
 
 function start(){
-  clean();
-  setTimeout(clean,150);
-  setTimeout(clean,700);
-  setTimeout(clean,1600);
-  const observer=new MutationObserver(()=>{
-    clearTimeout(observer._v396Timer);
-    observer._v396Timer=setTimeout(clean,20);
-  });
-  observer.observe(document.documentElement,{childList:true,subtree:true});
-  setInterval(clean,700);
+  clean(true);
+  setTimeout(()=>clean(true),180);
+  setTimeout(()=>clean(true),900);
+  const panel=document.getElementById('jogoPanel');
+  if(panel){
+    const observer=new MutationObserver(()=>{
+      clearTimeout(observer._v396Timer);
+      observer._v396Timer=setTimeout(()=>clean(false),80);
+    });
+    observer.observe(panel,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','disabled']});
+  }
+  setInterval(()=>clean(false),2200);
   root.JJKV396={version:VERSION,clean};
   console.info('JJK Energy Jogo UI cleanup ready',VERSION);
 }
