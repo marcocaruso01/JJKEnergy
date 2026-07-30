@@ -48,7 +48,9 @@ function boot(){installAudio();[
  ['v399-itadori-ui-progression.js?v=20260728v399b','jjk-v399-itadori-ui-progression'],
  ['v396-jogo-ui-cleanup.js?v=20260727v397b','jjk-v397-jogo-ui'],
  ['v400-counter-domain-fixes.js?v=20260728v400a','jjk-v400-counter-domain-fixes'],
- ['v401-jogo-counter-stability.js?v=20260728v402a','jjk-v402-jogo-single-state']
+ ['v401-jogo-counter-stability.js?v=20260728v402a','jjk-v402-jogo-single-state'],
+ ['v403-performance-android.js?v=20260730v403a','jjk-v403-performance-android'],
+ ['v403-player-resource-queue.js?v=20260730v403a','jjk-v403-player-resource-queue']
 ].forEach(([src,key])=>loadScript(src,key));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

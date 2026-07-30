@@ -54,7 +54,7 @@ test('home loads without uncaught errors, missing local files or duplicate runti
     showScreen: 'function',
     openCharacter: 'function',
     techniqueFix: '39.7.1',
-    giocoCleanup: '39.7.1',
+    giocoCleanup: '39.7.2',
     runtimeGuard: '39.7.0',
     itadoriRulesInstalled: true,
     itadoriUiInstalled: true

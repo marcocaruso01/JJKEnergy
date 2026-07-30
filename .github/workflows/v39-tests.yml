@@ -21,6 +21,8 @@ jobs:
           node --check v399-itadori-ui-progression.js
           node --check v400-counter-domain-fixes.js
           node --check v401-jogo-counter-stability.js
+          node --check v403-performance-android.js
+          node --check v403-player-resource-queue.js
       - name: Rule tests
         run: |
           node tests/v39-rules.test.js
