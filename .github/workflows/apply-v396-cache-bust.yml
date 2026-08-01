@@ -1,8 +1,8 @@
-name: Integrate V40.4 event-driven runtime
+name: Deploy V40.4 event-driven runtime safely
 
 on:
   push:
-    branches: [agent/v404-event-driven-runtime]
+    branches: [main]
     paths:
       - '.github/workflows/apply-v396-cache-bust.yml'
 
@@ -10,15 +10,20 @@ permissions:
   contents: write
 
 jobs:
-  patch:
+  deploy:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: agent/v404-event-driven-runtime
           fetch-depth: 0
-      - name: Apply event-driven integration
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build event-driven integration in the worktree
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -86,7 +91,7 @@ jobs:
               const stack=stackText(),file=sourceFile(stack),source=callbackText(callback);
               const suppress=file==='v392-gameplay.js'||(MOBILE&&file==='v14-cinematic.js'&&/records|v14-value-pop|cloud-kpi-value|gm-summary-value/.test(source));
               if(suppress){
-                const entry={file,source:source.slice(0,220),registeredAt:Date.now()};blockedObservers.push(entry);
+                blockedObservers.push({file,source:source.slice(0,220),registeredAt:Date.now()});
                 schedule(file==='v392-gameplay.js'?'state':'screen','observer-register');
                 return{observe(){},disconnect(){},takeRecords(){return[];}};
               }
@@ -113,10 +118,9 @@ jobs:
           html = index.read_text(encoding='utf-8')
           html = re.sub(r'\s*<script src="v404-event-runtime\.js\?v=[^"]+"></script>\s*', '\n', html)
           marker = '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
-          script = marker+'\n<script src="v404-event-runtime.js?v=20260801v404a"></script>'
           if marker not in html:
               raise SystemExit('viewport marker not found')
-          html = html.replace(marker, script, 1)
+          html = html.replace(marker, marker+'\n<script src="v404-event-runtime.js?v=20260801v404a"></script>', 1)
           html = re.sub(r'sfx\.js\?v=[^"\']+', 'sfx.js?v=20260801s404a', html, count=1)
           index.write_text(html, encoding='utf-8')
 
@@ -215,62 +219,24 @@ test('characters and resource controls remain functional', async ({ page }) => {
   expect(await page.locator('#techGrid > .tech-card').count()).toBeGreaterThan(0);
 });
 """, encoding='utf-8')
-
-          for temporary in [Path('.github/workflows/audit-v404-runtime-timers.yml'),Path('.github/workflows/apply-v404-event-runtime.yml')]:
-              if temporary.exists(): temporary.unlink()
-
-          final = """name: Apply V40.4 cache bust
-
-          on:
-            push:
-              branches: [main]
-              paths:
-                - '.github/workflows/apply-v396-cache-bust.yml'
-            workflow_dispatch:
-
-          permissions:
-            contents: write
-
-          jobs:
-            patch-index:
-              if: github.actor != 'github-actions[bot]'
-              runs-on: ubuntu-latest
-              steps:
-                - uses: actions/checkout@v4
-                  with:
-                    fetch-depth: 0
-                - name: Update site asset version
-                  run: |
-                    python3 - <<'PY2'
-                    from pathlib import Path
-                    import re
-                    path=Path('index.html')
-                    text=path.read_text(encoding='utf-8')
-                    updated=re.sub(r'sfx\\.js\\?v=[^\"\\']+','sfx.js?v=20260801s404a',text,count=1)
-                    if updated==text: raise SystemExit(0)
-                    path.write_text(updated,encoding='utf-8')
-                    PY2
-                - name: Commit cache update
-                  run: |
-                    git config user.name "github-actions[bot]"
-                    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-                    git add index.html
-                    if git diff --cached --quiet; then exit 0; fi
-                    git commit -m "Bust cache for V40.4 event-driven runtime"
-                    git push
-          """
-          Path('.github/workflows/apply-v396-cache-bust.yml').write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in final.splitlines())+'\n',encoding='utf-8')
           PY
-      - name: Validate integration
+
+      - name: Validate syntax and static integrity
         run: |
           node --check v404-event-runtime.js
           node --check scripts/static-audit.mjs
-          grep -q 'v404-event-runtime.js?v=20260801v404a' index.html
-          grep -q 'sfx.js?v=20260801s404a' index.html
-      - name: Commit integration
+          npm install
+          npm run audit:static
+
+      - name: Run browser tests on the patched worktree
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+
+      - name: Publish only after all tests pass
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Integrate V40.4 event-driven runtime"
-          git push origin HEAD:agent/v404-event-driven-runtime
+          git add index.html v404-event-runtime.js package.json scripts/static-audit.mjs tests/v404-event-runtime.spec.mjs .github/workflows/v39-tests.yml
+          git commit -m "V40.4: switch UI refreshes to event-driven updates"
+          git push
