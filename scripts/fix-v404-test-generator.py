@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 path = Path('scripts/deploy-v404.py')
 text = path.read_text(encoding='utf-8')
@@ -28,16 +29,27 @@ new_resource = """  await page.evaluate(()=>window.openCharacter('gojo',{silentS
   const before=Number(await page.locator('#energyValue').textContent());
   await page.locator('#energyActions .gain').first().click();"""
 
-if old_idle not in text:
-    if new_idle not in text:
-        raise SystemExit('Idle test generator block not found')
-else:
+if old_idle in text:
     text = text.replace(old_idle, new_idle, 1)
+elif new_idle not in text:
+    raise SystemExit('Idle test generator block not found')
 
-if old_resource not in text:
-    if new_resource not in text:
-        raise SystemExit('Resource test generator block not found')
-else:
+if old_resource in text:
     text = text.replace(old_resource, new_resource, 1)
+elif new_resource not in text:
+    raise SystemExit('Resource test generator block not found')
+
+# GitHub App tokens cannot push workflow-file changes. The final runtime does not
+# need to modify the existing syntax workflow because the PR audit and browser
+# suite validate v404-event-runtime.js directly before merge.
+workflow_pattern = re.compile(
+    r'''workflow = Path\(["']\.github/workflows/v39-tests\.yml["']\)\n'''
+    r'''.*?'''
+    r'''workflow\.write_text\(yml, encoding=["']utf-8["']\)\n\n''',
+    re.S,
+)
+text, removed = workflow_pattern.subn('', text, count=1)
+if removed != 1 and 'workflow = Path(".github/workflows/v39-tests.yml")' in text:
+    raise SystemExit('Could not remove workflow modification block')
 
 path.write_text(text, encoding='utf-8')
