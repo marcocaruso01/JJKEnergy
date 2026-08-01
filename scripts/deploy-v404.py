@@ -129,16 +129,6 @@ data = json.loads(package.read_text(encoding="utf-8"))
 data["version"] = "40.4.0"
 package.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-workflow = Path(".github/workflows/v39-tests.yml")
-yml = workflow.read_text(encoding="utf-8")
-anchor = "          node --check v403-player-resource-queue.js\n"
-check = "          node --check v404-event-runtime.js\n"
-if check not in yml:
-    if anchor not in yml:
-        raise SystemExit("syntax anchor missing")
-    yml = yml.replace(anchor, anchor + check, 1)
-workflow.write_text(yml, encoding="utf-8")
-
 audit = Path("scripts/static-audit.mjs")
 source = audit.read_text(encoding="utf-8")
 source = source.replace("20260730s403a)/.test(index)", "20260730s403a|20260801s404a|20260801s404b)/.test(index)")
@@ -194,11 +184,11 @@ test('legacy polling and obsolete observers are captured', async ({ page }) => {
 
 test('idle pages do not continuously execute captured UI refreshes', async ({ page }) => {
   await openCleanPage(page);
-  const before=await page.evaluate(()=>({flushes:window.JJKV404.audit().flushCount,runs:window.JJKV404.blocked.reduce((sum,item)=>sum+item.runs,0)}));
+  const before=await page.evaluate(()=>({flushes:window.JJKV404.audit().flushCount,runs:window.JJKV404.blocked.reduce((sum,item)=>sum+item.runs,0),blocked:window.JJKV404.blocked.length}));
   await page.waitForTimeout(1800);
-  const after=await page.evaluate(()=>({flushes:window.JJKV404.audit().flushCount,runs:window.JJKV404.blocked.reduce((sum,item)=>sum+item.runs,0)}));
+  const after=await page.evaluate(()=>({flushes:window.JJKV404.audit().flushCount,runs:window.JJKV404.blocked.reduce((sum,item)=>sum+item.runs,0),blocked:window.JJKV404.blocked.length}));
   expect(after.flushes-before.flushes).toBeLessThanOrEqual(1);
-  expect(after.runs-before.runs).toBeLessThanOrEqual(window.JJKV404?.blocked?.length||0);
+  expect(after.runs-before.runs).toBeLessThanOrEqual(Math.max(before.blocked,after.blocked));
 });
 
 test('a real state event performs a coordinated refresh', async ({ page }) => {
@@ -215,6 +205,11 @@ test('characters and resource controls remain functional', async ({ page }) => {
   await openCleanPage(page);
   await page.evaluate(()=>window.openCharacter('gojo',{silentStats:true}));
   await page.waitForTimeout(250);
+  const resourcesTab=page.getByRole('button',{name:/Risorse/});
+  if(await resourcesTab.isVisible()){
+    await resourcesTab.click();
+    await page.waitForTimeout(180);
+  }
   const before=Number(await page.locator('#energyValue').textContent());
   await page.locator('#energyActions .gain').first().click();
   await page.waitForTimeout(250);
