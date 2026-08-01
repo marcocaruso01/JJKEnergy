@@ -59,8 +59,8 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a)/.test(index)) {
-  fail('index.html does not use an approved V39.7-V40.3 sfx cache key.');
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a|20260801s404a|20260801s404b)/.test(index)) {
+  fail('index.html does not use an approved V39.7-V40.4 sfx cache key.');
 }
 
 const sfx = read('sfx.js');
@@ -73,6 +73,21 @@ if (!/v400-counter-domain-fixes\.js\?v=20260728v400a/.test(sfx)) fail('sfx.js do
 if (!/v401-jogo-counter-stability\.js\?v=20260728v402a/.test(sfx)) fail('sfx.js does not load the V40.2 single Jogo state.');
 if (!/v403-performance-android\.js\?v=20260730v403a/.test(sfx)) fail('sfx.js does not load the V40.3 performance and Android fixes.');
 if (/v365-late-technique-ui\.js|v393-stability\.js/.test(sfx)) fail('sfx.js still loads an obsolete conflicting patch.');
+
+
+const runtime404 = read('v404-event-runtime.js');
+if (!/event-driven runtime coordinator/.test(runtime404) || !/classifyLegacyInterval/.test(runtime404)) {
+  fail('V40.4 event-driven runtime coordinator is missing.');
+}
+if (!/<meta name=["']viewport["'][^>]*>\s*<script src=["']v404-event-runtime\.js\?v=20260801v404b["']><\/script>/.test(index)) {
+  fail('V40.4 must load in the document head before legacy scripts.');
+}
+if (!/blockedObservers/.test(runtime404) || !/NativeMutationObserver/.test(runtime404)) {
+  fail('V40.4 does not suppress obsolete body-wide observers.');
+}
+if (!/function schedule\(/.test(runtime404) || !/blocked=new Map/.test(runtime404)) {
+  fail('V40.4 does not coordinate legacy refresh callbacks through events.');
+}
 
 const exactTechniqueFix = read('v394-technique-fix.js');
 if (/available\s*\[\s*i\s*\]/.test(exactTechniqueFix)) fail('Technique fix still contains positional available[i] mapping.');
