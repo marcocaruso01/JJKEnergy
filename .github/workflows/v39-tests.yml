@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -31,3 +34,57 @@ jobs:
           node tests/v400-rules.test.js
       - name: Browser smoke test
         run: node tests/v39-browser-smoke.test.js
+
+  prepare_v404:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/v404-live-final'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build V40.4 in the isolated pull request branch
+        run: |
+          python3 scripts/fix-v404-test-generator.py
+          python3 scripts/deploy-v404.py
+
+      - name: Validate syntax and static integrity
+        run: |
+          node --check v404-event-runtime.js
+          node --check scripts/static-audit.mjs
+          npm install
+          npm run audit:static
+
+      - name: Run the complete desktop and mobile browser suite
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v404-pr-diagnostics
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Save the exact version that passed every check
+        if: success()
+        run: |
+          rm -f v404-deploy-failure.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html v404-event-runtime.js package.json scripts/deploy-v404.py scripts/static-audit.mjs tests/v404-event-runtime.spec.mjs .github/workflows/v39-tests.yml
+          git add -u v404-deploy-failure.txt 2>/dev/null || true
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Prepare tested V40.4 event-driven deployment"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
