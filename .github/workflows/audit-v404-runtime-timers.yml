@@ -1,0 +1,53 @@
+name: Audit V40.4 runtime timers
+
+on:
+  push:
+    branches: [agent/v404-event-driven-runtime]
+    paths:
+      - '.github/workflows/audit-v404-runtime-timers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v404-event-driven-runtime
+          fetch-depth: 0
+      - name: Scan recurring runtime work
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          roots = [Path('index.html'), *sorted(Path('.').glob('*.js'))]
+          patterns = {
+              'setInterval': re.compile(r'\bsetInterval\s*\('),
+              'MutationObserver': re.compile(r'\bMutationObserver\s*\('),
+              'requestAnimationFrame': re.compile(r'\brequestAnimationFrame\s*\('),
+          }
+          lines = []
+          for path in roots:
+              if not path.exists():
+                  continue
+              text = path.read_text(encoding='utf-8', errors='replace')
+              for number, line in enumerate(text.splitlines(), 1):
+                  for label, pattern in patterns.items():
+                      if pattern.search(line):
+                          snippet = ' '.join(line.strip().split())
+                          lines.append(f'{label}\t{path}\t{number}\t{snippet[:420]}')
+          Path('runtime-timer-audit.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          print('\n'.join(lines))
+          PY
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add runtime-timer-audit.txt
+          git commit -m "Audit recurring runtime work"
+          git push origin HEAD:agent/v404-event-driven-runtime
