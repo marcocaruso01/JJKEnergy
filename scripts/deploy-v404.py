@@ -194,11 +194,11 @@ test('legacy polling and obsolete observers are captured', async ({ page }) => {
 
 test('idle pages do not continuously execute captured UI refreshes', async ({ page }) => {
   await openCleanPage(page);
-  const before=await page.evaluate(()=>({flushes:window.JJKV404.audit().flushCount,runs:window.JJKV404.blocked.reduce((sum,item)=>sum+item.runs,0)}));
+  const before=await page.evaluate(()=>({flushes:window.JJKV404.audit().flushCount,runs:window.JJKV404.blocked.reduce((sum,item)=>sum+item.runs,0),blocked:window.JJKV404.blocked.length}));
   await page.waitForTimeout(1800);
-  const after=await page.evaluate(()=>({flushes:window.JJKV404.audit().flushCount,runs:window.JJKV404.blocked.reduce((sum,item)=>sum+item.runs,0)}));
+  const after=await page.evaluate(()=>({flushes:window.JJKV404.audit().flushCount,runs:window.JJKV404.blocked.reduce((sum,item)=>sum+item.runs,0),blocked:window.JJKV404.blocked.length}));
   expect(after.flushes-before.flushes).toBeLessThanOrEqual(1);
-  expect(after.runs-before.runs).toBeLessThanOrEqual(window.JJKV404?.blocked?.length||0);
+  expect(after.runs-before.runs).toBeLessThanOrEqual(Math.max(before.blocked,after.blocked));
 });
 
 test('a real state event performs a coordinated refresh', async ({ page }) => {
@@ -215,6 +215,11 @@ test('characters and resource controls remain functional', async ({ page }) => {
   await openCleanPage(page);
   await page.evaluate(()=>window.openCharacter('gojo',{silentStats:true}));
   await page.waitForTimeout(250);
+  const resourcesTab=page.getByRole('button',{name:/Risorse/});
+  if(await resourcesTab.isVisible()){
+    await resourcesTab.click();
+    await page.waitForTimeout(180);
+  }
   const before=Number(await page.locator('#energyValue').textContent());
   await page.locator('#energyActions .gain').first().click();
   await page.waitForTimeout(250);
