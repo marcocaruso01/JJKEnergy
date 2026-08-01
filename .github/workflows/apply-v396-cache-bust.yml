@@ -5,9 +5,14 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apply-v396-cache-bust.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: v404-event-runtime-deploy
+  cancel-in-progress: true
 
 jobs:
   deploy:
