@@ -23,6 +23,7 @@ jobs:
           node --check v401-jogo-counter-stability.js
           node --check v403-performance-android.js
           node --check v403-player-resource-queue.js
+          node --check v404-event-runtime.js
       - name: Rule tests
         run: |
           node tests/v39-rules.test.js

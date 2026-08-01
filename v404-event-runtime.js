@@ -9,7 +9,10 @@ const nativeSetInterval=root.setInterval.bind(root);
 const nativeClearInterval=root.clearInterval.bind(root);
 const nativeSetTimeout=root.setTimeout.bind(root);
 const nativeRequestAnimationFrame=(root.requestAnimationFrame||function(callback){return nativeSetTimeout(callback,16);}).bind(root);
+const NativeMutationObserver=root.MutationObserver;
+const MOBILE=!!(root.matchMedia&&root.matchMedia('(max-width:900px)').matches);
 const blocked=new Map();
+const blockedObservers=[];
 const wrappers=new Map();
 let virtualId=-400400;
 let scheduled=false;
@@ -30,16 +33,17 @@ function callbackText(callback){
   try{return Function.prototype.toString.call(callback);}catch(_){return String(callback||'');}
 }
 function stackText(){try{return String(new Error().stack||'');}catch(_){return '';}}
+function stackHasFile(stack,file){return stack.includes('/'+file+':')||stack.includes('/'+file+'?')||stack.includes(file+':')||stack.includes(file+'?');}
 function sourceFile(stack){
-  for(const file of HEAVY_FILES)if(stack.includes('/'+file+':')||stack.includes(file+':'))return file;
-  if(stack.includes('index.html:'))return'index.html';
-  if(stack.includes('supabase-multiplayer.js:'))return'supabase-multiplayer.js';
-  if(stack.includes('supabase-statistics.js:'))return'supabase-statistics.js';
-  if(stack.includes('enhancements.js:'))return'enhancements.js';
-  if(stack.includes('cinematic-v14.js:'))return'cinematic-v14.js';
-  if(stack.includes('gm-ai.js:'))return'gm-ai.js';
-  if(stack.includes('v20.js:'))return'v20.js';
-  if(stack.includes('v36-update.js:'))return'v36-update.js';
+  for(const file of HEAVY_FILES)if(stackHasFile(stack,file))return file;
+  if(stackHasFile(stack,'index.html'))return'index.html';
+  if(stackHasFile(stack,'supabase-multiplayer.js'))return'supabase-multiplayer.js';
+  if(stackHasFile(stack,'supabase-statistics.js'))return'supabase-statistics.js';
+  if(stackHasFile(stack,'enhancements.js'))return'enhancements.js';
+  if(stackHasFile(stack,'cinematic-v14.js'))return'cinematic-v14.js';
+  if(stackHasFile(stack,'gm-ai.js'))return'gm-ai.js';
+  if(stackHasFile(stack,'v20.js'))return'v20.js';
+  if(stackHasFile(stack,'v36-update.js'))return'v36-update.js';
   return'';
 }
 function classifyLegacyInterval(callback,delay,stack){
@@ -53,7 +57,7 @@ function classifyLegacyInterval(callback,delay,stack){
   }
   if(file==='v36-update.js'){
     if(/renderOtherSheets|refreshSpectator/.test(source))return'remote';
-    if(/updateOtherSheetsButton|injectJogoQuickControls|syncLocalTojiMonster/.test(source))return'state';
+    if(/updateOtherSheetsButton|injectJogoQuickControls|syncLocalTojiMonster|changeCombatBonus|v36-body-lock-note|permanentBodyLocked/.test(source))return'state';
   }
   if(file==='v362-rules-hotfix.js'&&/fixTojiLocal|updateYutaNote/.test(source))return'state';
   if(file==='v365-late-technique-ui.js')return'rebind';
@@ -77,7 +81,7 @@ function guardedNativeInterval(callback,delay,args,stack){
   let adjusted=ms;
   if(file==='supabase-multiplayer.js'&&/refreshRoom\(false\)/.test(source)&&ms<=5000)adjusted=15000;
   return nativeSetInterval(function(){
-    if(document.hidden&&file!=='supabase-multiplayer.js')return;
+    if(document.hidden&&['index.html','cinematic-v14.js','gm-ai.js','v20.js','enhancements.js'].includes(file))return;
     if(/rotateHomeCast/.test(source)&&activeScreen()!=='home')return;
     if(/updateGMClock/.test(source)&&activeScreen()!=='gameMaster')return;
     return typeof callback==='function'?callback.apply(root,args):root.eval(String(callback));
@@ -100,11 +104,24 @@ root.clearInterval=function(id){
   if(blocked.delete(id))return;
   return nativeClearInterval(id);
 };
+if(typeof NativeMutationObserver==='function'){
+  root.MutationObserver=function(callback){
+    const stack=stackText(),file=sourceFile(stack),source=callbackText(callback);
+    const suppress=file==='v392-gameplay.js'||(MOBILE&&file==='v14-cinematic.js'&&/records|v14-value-pop|cloud-kpi-value|gm-summary-value/.test(source));
+    if(suppress){
+      blockedObservers.push({file,source:source.slice(0,220),registeredAt:Date.now()});
+      schedule(file==='v392-gameplay.js'?'state':'screen','observer-register');
+      return{observe(){},disconnect(){},takeRecords(){return[];}};
+    }
+    return new NativeMutationObserver(callback);
+  };
+  root.MutationObserver.prototype=NativeMutationObserver.prototype;
+}
 
 function kindMatches(entry,kinds){
   return kinds.has('all')||kinds.has(entry.kind)||
-    (kinds.has('state')&&entry.kind==='events')||
-    (kinds.has('remote')&&(entry.kind==='state'||entry.kind==='events'||entry.kind==='gm'))||
+    (kinds.has('state')&&(entry.kind==='events'||entry.kind==='rebind'))||
+    (kinds.has('remote')&&(entry.kind==='state'||entry.kind==='events'||entry.kind==='gm'||entry.kind==='rebind'))||
     (kinds.has('screen')&&(entry.kind==='state'||entry.kind==='rebind'||entry.kind==='gm'||entry.kind==='events'));
 }
 function flush(){
@@ -118,7 +135,7 @@ function flush(){
       if(!kindMatches(entry,kinds))return;
       try{entry.callback.apply(root,entry.args);entry.runs+=1;}catch(error){console.warn('V40.4 refresh callback',entry.file,error);}
     });
-    if(kinds.has('all')||kinds.has('screen')||kinds.has('rebind')){
+    if(kinds.has('all')||kinds.has('screen')||kinds.has('rebind')||kinds.has('state')||kinds.has('remote')){
       try{root.JJKV395?.rebind?.();}catch(_){}
       try{root.JJKV396?.clean?.(true);}catch(_){}
     }
@@ -190,7 +207,7 @@ function installEvents(){
 }
 function audit(){
   const groups={};blocked.forEach(entry=>{groups[entry.kind]=(groups[entry.kind]||0)+1;});
-  const checks={version:VERSION,installed:true,events:document.documentElement.dataset.v404Events==='1',blockedIntervals:blocked.size,groups,flushCount,lastFlushAt,wrappedFunctions:wrappers.size};
+  const checks={version:VERSION,installed:true,events:document.documentElement.dataset.v404Events==='1',blockedIntervals:blocked.size,blockedObservers:blockedObservers.length,groups,flushCount,lastFlushAt,wrappedFunctions:wrappers.size};
   checks.ok=checks.events&&checks.wrappedFunctions>0;
   root.JJKV404Audit=checks;return checks;
 }
@@ -202,6 +219,6 @@ function start(){
   nativeSetTimeout(()=>{audit();console.info('JJK Energy event-driven runtime ready',VERSION,audit());},3600);
 }
 
-root.JJKV404={version:VERSION,refresh:schedule,audit,get blocked(){return [...blocked.values()].map(entry=>({kind:entry.kind,file:entry.file,delay:entry.delay,runs:entry.runs}));}};
+root.JJKV404={version:VERSION,refresh:schedule,audit,get blocked(){return [...blocked.values()].map(entry=>({kind:entry.kind,file:entry.file,delay:entry.delay,runs:entry.runs}));},get blockedObservers(){return blockedObservers.slice();}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })(typeof window!=='undefined'?window:globalThis);
