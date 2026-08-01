@@ -1,3 +1,4 @@
+// Final verification for the generated V40.4 runtime on desktop and mobile.
 import { test, expect } from '@playwright/test';
 
 async function openCleanPage(page) {
