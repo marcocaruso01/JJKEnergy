@@ -1,0 +1,41 @@
+name: Generate final V40.4 files
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.event.pull_request.head.ref == 'agent/v404-final-generated' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v404-final-generated
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Generate the final event-driven runtime
+        run: |
+          python3 scripts/fix-v404-test-generator.py
+          python3 scripts/deploy-v404.py
+          node --check v404-event-runtime.js
+          node --check scripts/static-audit.mjs
+          rm -f v404-deploy-failure.txt
+          rm -f scripts/fix-v404-test-generator.py
+          rm -f .github/workflows/generate-v404-final.yml
+
+      - name: Commit generated files to the PR branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Generate final V40.4 event-driven runtime"
+          git push origin HEAD:agent/v404-final-generated
