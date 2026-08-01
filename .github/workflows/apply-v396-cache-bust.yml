@@ -1,5 +1,5 @@
 name: Deploy V40.4 event-driven runtime safely
-# Protected retry 2026-08-01: no game content changes before every check passes.
+# Protected retry 2026-08-01: run regardless of whether the merge is attributed to a user, bot, or GitHub App.
 
 on:
   push:
@@ -17,7 +17,6 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
