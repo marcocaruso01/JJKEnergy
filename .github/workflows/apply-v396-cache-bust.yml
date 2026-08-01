@@ -1,5 +1,5 @@
 name: Deploy V40.4 event-driven runtime safely
-# Merge-triggered deployment: the live index changes only after all checks pass.
+# Merge-triggered deployment retry: tests now open the mobile Resources tab and avoid browser globals in Node assertions.
 
 on:
   push:
@@ -30,7 +30,9 @@ jobs:
           node-version: '22'
 
       - name: Build the event-driven version in the worktree
-        run: python3 scripts/deploy-v404.py
+        run: |
+          python3 scripts/fix-v404-test-generator.py
+          python3 scripts/deploy-v404.py
 
       - name: Validate syntax and static integrity
         run: |
@@ -61,7 +63,7 @@ jobs:
           rm -f v404-deploy-failure.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html v404-event-runtime.js package.json scripts/static-audit.mjs tests/v404-event-runtime.spec.mjs .github/workflows/v39-tests.yml
+          git add index.html v404-event-runtime.js package.json scripts/deploy-v404.py scripts/static-audit.mjs tests/v404-event-runtime.spec.mjs .github/workflows/v39-tests.yml
           git add -u v404-deploy-failure.txt 2>/dev/null || true
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "V40.4: switch UI refreshes to event-driven updates"
