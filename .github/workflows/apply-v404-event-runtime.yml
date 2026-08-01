@@ -1,0 +1,177 @@
+name: Apply V40.4 event-driven runtime
+
+on:
+  push:
+    branches: [agent/v404-event-driven-runtime]
+    paths:
+      - '.github/workflows/apply-v404-event-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v404-event-driven-runtime
+          fetch-depth: 0
+      - name: Integrate runtime and tests
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          runtime = Path('v404-event-runtime.js')
+          text = runtime.read_text(encoding='utf-8')
+          old = """function sourceFile(stack){
+            for(const file of HEAVY_FILES)if(stack.includes('/'+file+':')||stack.includes(file+':'))return file;
+            if(stack.includes('index.html:'))return'index.html';
+            if(stack.includes('supabase-multiplayer.js:'))return'supabase-multiplayer.js';
+            if(stack.includes('supabase-statistics.js:'))return'supabase-statistics.js';
+            if(stack.includes('enhancements.js:'))return'enhancements.js';
+            if(stack.includes('cinematic-v14.js:'))return'cinematic-v14.js';
+            if(stack.includes('gm-ai.js:'))return'gm-ai.js';
+            if(stack.includes('v20.js:'))return'v20.js';
+            if(stack.includes('v36-update.js:'))return'v36-update.js';
+            return'';
+          }"""
+          new = """function stackHasFile(stack,file){return stack.includes('/'+file+':')||stack.includes('/'+file+'?')||stack.includes(file+':')||stack.includes(file+'?');}
+          function sourceFile(stack){
+            for(const file of HEAVY_FILES)if(stackHasFile(stack,file))return file;
+            if(stackHasFile(stack,'index.html'))return'index.html';
+            if(stackHasFile(stack,'supabase-multiplayer.js'))return'supabase-multiplayer.js';
+            if(stackHasFile(stack,'supabase-statistics.js'))return'supabase-statistics.js';
+            if(stackHasFile(stack,'enhancements.js'))return'enhancements.js';
+            if(stackHasFile(stack,'cinematic-v14.js'))return'cinematic-v14.js';
+            if(stackHasFile(stack,'gm-ai.js'))return'gm-ai.js';
+            if(stackHasFile(stack,'v20.js'))return'v20.js';
+            if(stackHasFile(stack,'v36-update.js'))return'v36-update.js';
+            return'';
+          }"""
+          if old not in text:
+              raise SystemExit('sourceFile block not found')
+          runtime.write_text(text.replace(old,new,1),encoding='utf-8')
+
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          marker = '<script src="enhancements.js?v=20260714s4"></script>'
+          insert = '<script src="v404-event-runtime.js?v=20260801v404a"></script>\n'+marker
+          if 'v404-event-runtime.js' not in html:
+              if marker not in html:
+                  raise SystemExit('enhancements marker not found')
+              html = html.replace(marker,insert,1)
+          index.write_text(html,encoding='utf-8')
+
+          package = Path('package.json')
+          data = json.loads(package.read_text(encoding='utf-8'))
+          data['version']='40.4.0'
+          package.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          workflow = Path('.github/workflows/v39-tests.yml')
+          yml = workflow.read_text(encoding='utf-8')
+          check = '          node --check v404-event-runtime.js\n'
+          if check not in yml:
+              anchor = '          node --check v403-player-resource-queue.js\n'
+              if anchor not in yml:
+                  raise SystemExit('syntax anchor not found')
+              yml = yml.replace(anchor,anchor+check,1)
+          workflow.write_text(yml,encoding='utf-8')
+
+          audit = Path('scripts/static-audit.mjs')
+          source = audit.read_text(encoding='utf-8')
+          source = source.replace('20260730s403a)/.test(index)', '20260730s403a|20260801s404a)/.test(index)')
+          source = source.replace('V39.7-V40.3 sfx cache key', 'V39.7-V40.4 sfx cache key')
+          block = """
+          const runtime404 = read('v404-event-runtime.js');
+          if (!/event-driven runtime coordinator/.test(runtime404) || !/classifyLegacyInterval/.test(runtime404)) {
+            fail('V40.4 event-driven runtime coordinator is missing.');
+          }
+          if (!/v404-event-runtime\\.js\\?v=20260801v404a[\"']><\\/script>\\s*<script src=[\"']enhancements\\.js/.test(index)) {
+            fail('V40.4 must load before the legacy runtime scripts.');
+          }
+          if (!/function schedule\(/.test(runtime404) || !/blocked=new Map/.test(runtime404)) {
+            fail('V40.4 does not coordinate legacy refresh callbacks through events.');
+          }
+          """
+          anchor = "const exactTechniqueFix = read('v394-technique-fix.js');"
+          if 'const runtime404' not in source:
+              if anchor not in source:
+                  raise SystemExit('static audit anchor missing')
+              source = source.replace(anchor,block+'\n'+anchor,1)
+          audit.write_text(source,encoding='utf-8')
+
+          test = Path('tests/v404-event-runtime.spec.mjs')
+          test.write_text("""import { test, expect } from '@playwright/test';
+
+async function openCleanPage(page) {
+  await page.addInitScript(() => {
+    try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
+  });
+  await page.goto('/?audit=404', { waitUntil: 'domcontentloaded' });
+  await page.addStyleTag({ content: '#v21AuthGate{display:none!important;pointer-events:none!important}' });
+  await page.waitForFunction(() => window.JJKV404?.audit?.().ok === true, null, { timeout: 15_000 });
+  await page.waitForTimeout(3800);
+}
+
+test('legacy UI polling is captured by the event-driven coordinator', async ({ page }) => {
+  const errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  await openCleanPage(page);
+  const audit=await page.evaluate(()=>window.JJKV404.audit());
+  expect(audit.blockedIntervals).toBeGreaterThanOrEqual(8);
+  expect(audit.groups.state||0).toBeGreaterThan(0);
+  expect(audit.wrappedFunctions).toBeGreaterThan(5);
+  expect(errors).toEqual([]);
+});
+
+test('idle pages do not keep executing captured UI refreshes', async ({ page }) => {
+  await openCleanPage(page);
+  const before=await page.evaluate(()=>window.JJKV404.audit().flushCount);
+  await page.waitForTimeout(1800);
+  const after=await page.evaluate(()=>window.JJKV404.audit().flushCount);
+  expect(after).toBe(before);
+});
+
+test('a real state event performs one coordinated refresh', async ({ page }) => {
+  await openCleanPage(page);
+  const before=await page.evaluate(()=>window.JJKV404.audit().flushCount);
+  await page.evaluate(()=>window.JJKV404.refresh('state','test'));
+  await page.waitForTimeout(180);
+  const after=await page.evaluate(()=>window.JJKV404.audit().flushCount);
+  expect(after).toBe(before+1);
+  await page.waitForTimeout(900);
+  const stable=await page.evaluate(()=>window.JJKV404.audit().flushCount);
+  expect(stable).toBe(after);
+});
+
+test('characters and resource controls remain functional', async ({ page }) => {
+  await openCleanPage(page);
+  await page.evaluate(()=>window.openCharacter('gojo',{silentStats:true}));
+  await page.waitForTimeout(250);
+  const before=await page.locator('#energyValue').textContent();
+  await page.locator('#energyActions .gain').first().click();
+  await page.waitForTimeout(250);
+  const after=await page.locator('#energyValue').textContent();
+  expect(Number(after)).toBe(Number(before)+1);
+  await expect(page.locator('#techGrid > .tech-card')).toHaveCount(1);
+});
+""",encoding='utf-8')
+
+          Path('.github/workflows/apply-v404-event-runtime.yml').unlink()
+          PY
+      - name: Validate generated files
+        run: |
+          node --check v404-event-runtime.js
+          node --check scripts/static-audit.mjs
+          grep -q 'v404-event-runtime.js?v=20260801v404a' index.html
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html v404-event-runtime.js package.json scripts/static-audit.mjs tests/v404-event-runtime.spec.mjs .github/workflows/v39-tests.yml .github/workflows/apply-v404-event-runtime.yml
+          git commit -m "Integrate V40.4 event-driven runtime"
+          git push origin HEAD:agent/v404-event-driven-runtime
