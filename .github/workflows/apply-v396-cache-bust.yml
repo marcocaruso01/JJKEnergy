@@ -1,5 +1,5 @@
 name: Deploy V40.4 event-driven runtime safely
-# Merge-triggered deployment retry: tests now open the mobile Resources tab and avoid browser globals in Node assertions.
+# Protected retry 2026-08-01: no game content changes before every check passes.
 
 on:
   push:
