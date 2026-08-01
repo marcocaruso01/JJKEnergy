@@ -1,4 +1,5 @@
 name: Deploy V40.4 event-driven runtime safely
+# Merge-triggered deployment: the live index changes only after all checks pass.
 
 on:
   push:
