@@ -3,7 +3,7 @@
 'use strict';
 if(root.JJK2GameState)return;
 
-const VERSION='2.0.0-alpha.2';
+const VERSION='2.0.0-alpha.3';
 const MODE='observe';
 const listeners=new Set();
 let state=freeze({
@@ -64,10 +64,13 @@ function replace(next,meta={}){
   return state;
 }
 
-function maxEnergyFor(definition,gradeId){
+function maxEnergyFor(characterId,definition,gradeId){
+  if(characterId==='jogo')return Math.max(0,numeric('jogoLife',numeric('life',0)));
   const grade=definition?.grades?.find?.(item=>item?.id===gradeId);
-  const value=Number(grade?.max);
-  return Number.isFinite(value)?value:0;
+  let value=Number(grade?.max);
+  if(!Number.isFinite(value))value=0;
+  if(characterId==='itadori'&&numeric('itadoriMaxFingers')>=10)value+=5;
+  return value;
 }
 
 function energyKind(characterId){
@@ -96,7 +99,7 @@ function syncFromLegacy(reason='manual'){
     },
     energy:{
       current:numeric('energy'),
-      max:maxEnergyFor(definition,gradeId),
+      max:maxEnergyFor(characterId,definition,gradeId),
       kind:energyKind(characterId)
     },
     combatBonus:numeric('combatBonus'),
