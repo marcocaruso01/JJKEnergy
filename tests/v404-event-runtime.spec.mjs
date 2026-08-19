@@ -10,14 +10,13 @@ async function openCleanPage(page) {
   await page.waitForTimeout(3800);
 }
 
-test('legacy polling and obsolete observers are captured', async ({ page }) => {
+test('legacy UI polling is blocked or removed at source without runtime errors', async ({ page }) => {
   const errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await openCleanPage(page);
   const audit=await page.evaluate(()=>window.JJKV404.audit());
-  expect(audit.blockedIntervals).toBeGreaterThanOrEqual(8);
-  expect(audit.blockedObservers).toBeGreaterThanOrEqual(1);
-  expect(audit.groups.state||0).toBeGreaterThan(0);
+  expect(audit.ok).toBe(true);
+  expect(Number(audit.legacyNativeIntervals||0)).toBe(0);
   expect(audit.wrappedFunctions).toBeGreaterThan(5);
   expect(errors).toEqual([]);
 });
