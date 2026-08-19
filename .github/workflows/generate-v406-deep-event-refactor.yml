@@ -6,6 +6,9 @@ on:
     paths:
       - 'scripts/refactor-v406.py'
       - '.github/workflows/generate-v406-deep-event-refactor.yml'
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
@@ -17,6 +20,7 @@ concurrency:
 
 jobs:
   generate:
+    if: github.event_name != 'pull_request' || github.head_ref == 'agent/v406-deep-event-refactor'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
