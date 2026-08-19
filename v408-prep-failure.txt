@@ -1,4 +1,0 @@
-V40.8 preparation failed
-run_id=32246346354
-head=18a5b971791a47a59a134e57151ff48f0595d2b1
-last_completed_stage=static-green
