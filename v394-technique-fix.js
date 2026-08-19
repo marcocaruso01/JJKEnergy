@@ -169,7 +169,7 @@ function start(){
   setTimeout(bind,100);
   setTimeout(bind,500);
   setTimeout(bind,1400);
-  setInterval(()=>{patchRenderer();observeGrid();bindButtons();},1000);
+  root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all','rebind'].includes(kind)&&!document.hidden)setTimeout(bind,0);},{passive:true});root.addEventListener('pageshow',()=>setTimeout(bind,0),{passive:true});
   console.info('JJK Energy exact technique identity ready',VERSION);
 }
 

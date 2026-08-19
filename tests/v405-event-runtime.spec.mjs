@@ -15,7 +15,7 @@ test('V40.5 leaves no native interval from known legacy UI modules', async ({ pa
   page.on('pageerror',error=>errors.push(error.message));
   await openCleanPage(page);
   const audit=await page.evaluate(()=>window.JJKV405.audit());
-  expect(audit.version).toBe('40.5.0');
+  expect(['40.5.0','40.6.0']).toContain(audit.version);
   expect(audit.legacyNativeIntervals).toBe(0);
   expect(audit.wrappedFunctions).toBeGreaterThan(5);
   expect(errors).toEqual([]);
@@ -42,8 +42,8 @@ test('a real resource change still refreshes the character state', async ({ page
   expect(await page.locator('#techGrid > .tech-card').count()).toBeGreaterThan(0);
 });
 
-test('V40.4 compatibility API still points at V40.5', async ({ page }) => {
+test('V40.4 and V40.5 compatibility APIs remain available', async ({ page }) => {
   await openCleanPage(page);
   const result=await page.evaluate(()=>({same:window.JJKV404===window.JJKV405,version:window.JJKV404?.version}));
-  expect(result).toEqual({same:true,version:'40.5.0'});
+  expect(result.same).toBe(true);expect(['40.5.0','40.6.0']).toContain(result.version);
 });

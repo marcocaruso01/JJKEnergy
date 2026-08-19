@@ -324,7 +324,7 @@ function renderSheets(force=false){
   detail.innerHTML='<article class="v37-detail-card"><section class="v37-detail-hero"><img src="'+(ch?.image||'')+'" alt=""><div><small>'+(p.locked?'IN ATTESA':'TURNO ATTIVO')+'</small><h3>'+String(p.name||'Giocatore').replace(/[<>]/g,'')+'</h3><p>'+String(ch?.name||p.characterId).replace(/[<>]/g,'')+'</p></div><span class="v37-grade">'+String(s.gradeId||'G4')+'</span></section><section class="v37-stats"><div class="v37-stat"><small>Vita</small><b>'+String(s.life??'—')+' / '+String(max)+'</b></div><div class="v37-stat"><small>'+(p.characterId==='toji'?'Vigore':'Energia')+'</small><b>'+String(s.energy??'—')+'</b></div><div class="v37-stat"><small>EXP</small><b>'+String(s.exp??0)+'</b></div><div class="v37-stat"><small>Corpo base</small><b>'+String((ch?.baseBody||0)+(p.characterId==='itadori'?itadoriFingerBonuses(s.itadoriMaxFingers).body:0))+'</b></div></section><h3>Tecniche sbloccate · '+tech.length+'</h3><section class="v37-techniques">'+tech.map(t=>'<article class="v37-tech"><header><b>'+String(t.name).replace(/[<>]/g,'')+'</b><span>'+t.grade+'</span></header><p>'+String(t.v27CostLabel||('Costo: '+num(t.cost)+' Energia')).replace(/[<>]/g,'')+'</p><p>'+String(t.effect||t.extra||(t.bonus!=null?'+'+t.bonus+' Corpo':'Effetto speciale')).replace(/[<>]/g,'')+'</p></article>').join('')+'</section></article>';
   requestAnimationFrame(()=>{detail.scrollTop=Math.min(scroll,detail.scrollHeight-detail.clientHeight);});
 }
-function openSheets(){const modalEl=ensureSheetsModal();document.getElementById('v36OtherSheetsModal')?.classList.remove('show');modalEl.classList.add('show');selectedSheet=null;lastSheetSignature='';renderSheets(true);clearInterval(sheetsTimer);sheetsTimer=setInterval(()=>renderSheets(false),900);}
+function openSheets(){const modalEl=ensureSheetsModal();document.getElementById('v36OtherSheetsModal')?.classList.remove('show');modalEl.classList.add('show');selectedSheet=null;lastSheetSignature='';renderSheets(true);clearInterval(sheetsTimer);sheetsTimer=null;}
 function closeSheets(){document.getElementById('v37SheetsModal')?.classList.remove('show');clearInterval(sheetsTimer);sheetsTimer=null;}
 
 function resetTurnScoped(){
@@ -412,7 +412,7 @@ function verifyRuntime(){
 function bindAll(){applyCharacters();installStateWrappers();installTechniqueWrappers();installEvents();updatePanels();}
 function install(){
   if(root.__JJK_V37_INSTALLED__)return;root.__JJK_V37_INSTALLED__=true;
-  const start=()=>{bindAll();setTimeout(()=>{bindAll();try{getFunction('renderAll')?.();}catch(_){}},350);setTimeout(bindAll,1200);setTimeout(()=>verifyRuntime(),1600);setInterval(()=>{bindAll();watchTurn();updatePanels();},1300);};
+  const start=()=>{bindAll();setTimeout(()=>{bindAll();try{getFunction('renderAll')?.();}catch(_){}},350);setTimeout(bindAll,1200);setTimeout(()=>verifyRuntime(),1600);const runtimeRefresh=()=>{bindAll();watchTurn();updatePanels();if(document.getElementById('v37SheetsModal')?.classList.contains('show'))renderSheets(false);};root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all','rebind'].includes(kind)&&!document.hidden)setTimeout(runtimeRefresh,0);},{passive:true});root.addEventListener('pageshow',()=>setTimeout(runtimeRefresh,0),{passive:true});};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 }
 
