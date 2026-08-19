@@ -1,4 +1,0 @@
-V40.8 preparation failed before normal PR validation
-run_id=32247241642
-head=cd4c67fb5e0b64d178c88e0afa42d9684c4b2847
-last_completed_stage=before-browser
