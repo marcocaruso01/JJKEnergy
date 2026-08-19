@@ -42,6 +42,8 @@ function boot(){installAudio();[
  ['legacy-bridge-v408.js?v=20260819v408a','jjk-v408-legacy-bridge'],
  ['game-state-v408.js?v=20260819v408a','jjk-v408-game-state'],
  ['battle-engine-v409.js?v=20260819v409a','jjk-v409-battle-engine'],
+ ['battle-practice-v410.js?v=20260819v410a','jjk-v410-battle-practice'],
+ ['battle-ui-v410.js?v=20260819v410a','jjk-v410-battle-ui'],
  ['v362-rules-hotfix.js?v=20260819v406a','jjk-v362-rules'],
  ['v363-copy-complete.js?v=20260725v363','jjk-v363-copy'],
  ['v364-pretty-technique-inputs.js?v=20260725v364b','jjk-v364-inputs'],
