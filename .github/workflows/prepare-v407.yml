@@ -1,0 +1,45 @@
+name: Prepare V40.7 Character Catalog
+
+on:
+  push:
+    branches: [agent/v407-character-catalog]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prepare-v407-character-catalog
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate V40.7 integration
+        run: python3 scripts/prepare-v407.py
+      - name: Validate syntax and static integrity
+        run: |
+          node --check character-catalog-v407.js
+          node --check scripts/static-audit.mjs
+          npm install
+          npm run audit:static
+      - name: Run complete browser suite
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+      - name: Save exact passing integration to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html scripts/static-audit.mjs
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "V40.7: activate Character Catalog integration"
+          git push
