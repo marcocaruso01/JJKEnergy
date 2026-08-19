@@ -17,6 +17,7 @@ const ROOM_FIELDS=Object.freeze([
   'yutaKatanaActive','yutaCopiedTechnique','yutaCopiedTokens','yutaCopiedVigor','yutaCopiedFingers',
   'yutaCopiedMaxFingers','yutaCopiedHeat','bossRushActive','used','log','updatedAt'
 ]);
+let buildingRoomSnapshot=false;
 
 function cloneValue(value){
   if(value===undefined||value===null||typeof value!=='object')return value;
@@ -35,10 +36,9 @@ function snapshot(){
   bridge.fields.forEach(name=>{out[name]=cloneValue(bridge.read(name));});
   return out;
 }
-function roomSnapshot(options={}){
+function baseRoomSnapshot(updatedAt){
   const characterId=get('currentId'),current=get('current');
   if(!characterId||!current)return null;
-  const forcedUpdatedAt=Number(options.updatedAt);
   return {
     characterId,
     gradeId:get('gradeId'),
@@ -66,8 +66,23 @@ function roomSnapshot(options={}){
     bossRushActive:get('bossRushActive'),
     used:cloneValue(get('used'))||[],
     log:(cloneValue(get('log'))||[]).slice(0,50),
-    updatedAt:Number.isFinite(forcedUpdatedAt)?forcedUpdatedAt:Date.now()
+    updatedAt
   };
+}
+function roomSnapshot(options={}){
+  const forcedUpdatedAt=Number(options.updatedAt);
+  const stamp=Number.isFinite(forcedUpdatedAt)?forcedUpdatedAt:Date.now();
+  if(!get('currentId')||!get('current'))return null;
+  let output=null;
+  const builder=!buildingRoomSnapshot?bridge.resolveFunction('buildLocalPlayerState'):null;
+  if(builder){
+    buildingRoomSnapshot=true;
+    try{output=cloneValue(builder.call(root));}catch(_){}
+    finally{buildingRoomSnapshot=false;}
+  }
+  if(!output)output=baseRoomSnapshot(stamp);
+  if(output)output.updatedAt=stamp;
+  return output;
 }
 function emitChange(fields,source){
   if(!fields.length)return;
