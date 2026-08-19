@@ -5,6 +5,7 @@ on:
     branches: [agent/v406-deep-event-refactor]
     paths:
       - 'scripts/refactor-v406.py'
+      - 'scripts/fix-v406-generator.py'
       - '.github/workflows/generate-v406-deep-event-refactor.yml'
   pull_request:
     branches: [main]
@@ -34,7 +35,9 @@ jobs:
           node-version: '22'
 
       - name: Generate V40.6 deep source refactor
-        run: python3 scripts/refactor-v406.py
+        run: |
+          python3 scripts/fix-v406-generator.py
+          python3 scripts/refactor-v406.py
 
       - name: Validate modified JavaScript syntax
         run: |
