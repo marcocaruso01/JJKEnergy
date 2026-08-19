@@ -73,6 +73,8 @@ function audit(){
 const api=Object.freeze({version:VERSION,ids,has,get,entries,legacy,technique,grade,validate,audit});
 root.JJKCharacterCatalog=api;
 root.JJKCatalog=api;
-try{audit();}catch(error){console.warn('JJK Character Catalog audit failed',error);}
+let initialAudit=null;
+try{initialAudit=audit();}catch(error){console.warn('JJK Character Catalog audit failed',error);}
+try{root.dispatchEvent(new CustomEvent('jjk:catalog-ready',{detail:{version:VERSION,count:initialAudit?.count||0}}));}catch(_){}
 console.info('JJK Energy Character Catalog ready',VERSION);
 })(typeof window!=='undefined'?window:globalThis);
