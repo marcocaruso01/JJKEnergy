@@ -406,7 +406,7 @@ function init(){
   const gmGrid=document.getElementById('gmPlayerGrid');if(gmGrid)new MutationObserver(bindGMFastControls).observe(gmGrid,{childList:true});
   window.addEventListener('resize',()=>setTimeout(refreshV25,80));
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(refreshV25,80);});
-  setInterval(()=>{const room=getRoom();if(room?.isHost&&room.phase==='playing'&&document.getElementById('gameMaster')?.classList.contains('active'))window.renderGMDashboard();},900);
+  window.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';const room=getRoom();if(['state','remote','screen','all'].includes(kind)&&room?.isHost&&room.phase==='playing'&&document.getElementById('gameMaster')?.classList.contains('active'))setTimeout(()=>window.renderGMDashboard(),0);},{passive:true});
   setTimeout(refreshV25,250);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

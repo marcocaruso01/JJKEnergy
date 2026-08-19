@@ -66,7 +66,7 @@ function installUseTechnique(){wrap('useTechnique','__v362Rules',original=>funct
  return original.apply(this,arguments);
  });}
 function audit(){const list=[];Object.entries(chars()).forEach(([id,ch])=>{if(id!=='yuta')(ch.techniques||[]).forEach(t=>list.push(id+':'+t.key));});window.JJKYutaCopyAudit={version:VERSION,totalTechniques:list.length,techniques:list,corrected:['geto:tamamo','itadori:aiuto_choso','jogo:inversione','megumi:giardino']};}
-function init(){installToji();installYuta();installUseTechnique();audit();updateYutaNote();setInterval(()=>{fixTojiLocal(false);updateYutaNote();},1500);console.info('JJK Energy V36.2 rules ready',window.JJKYutaCopyAudit);}
+function init(){installToji();installYuta();installUseTechnique();audit();updateYutaNote();window.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all','rebind'].includes(kind)&&!document.hidden)setTimeout(()=>{fixTojiLocal(false);updateYutaNote();},0);},{passive:true});window.addEventListener('pageshow',()=>setTimeout(()=>{fixTojiLocal(false);updateYutaNote();},0),{passive:true});console.info('JJK Energy V36.2 rules ready',window.JJKYutaCopyAudit);}
 window.JJKV362={version:VERSION,fixToji:fixTojiLocal,audit};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

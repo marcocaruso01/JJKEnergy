@@ -379,7 +379,7 @@ function install(){
     setTimeout(bind,200);
     setTimeout(bind,700);
     setTimeout(()=>{bind();audit();},1700);
-    setInterval(bind,750);
+    root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all','rebind'].includes(kind)&&!document.hidden)setTimeout(bind,0);},{passive:true});root.addEventListener('pageshow',()=>setTimeout(bind,0),{passive:true});
     console.info('JJK Energy V39.8 requested rules ready',VERSION);
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>wait(0),{once:true});else wait(0);

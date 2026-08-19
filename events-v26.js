@@ -124,6 +124,6 @@ const baseUpdatePass=window.updatePassTurnButton;
 if(typeof baseUpdatePass==='function')window.updatePassTurnButton=function(){const out=baseUpdatePass.apply(this,arguments);updatePassTurnForEvents();return out;};
 
 window.JJKEventsV26={sync,render:renderHud,bossEvent,doubleExpEvent,startBossEvent,endBossEvent,startDoubleEvent,endDoubleEvent};
-function init(){ensureHud();ensureTransition();ensureGMEventPanel();renderHud();renderGMEventPanel();setInterval(()=>{renderHud();renderGMEventPanel();updatePassTurnForEvents();},1000);console.info('JJK events ready',VERSION);}
+function init(){ensureHud();ensureTransition();ensureGMEventPanel();renderHud();renderGMEventPanel();window.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all'].includes(kind)&&!document.hidden)setTimeout(()=>{renderHud();renderGMEventPanel();updatePassTurnForEvents();},0);},{passive:true});console.info('JJK events ready',VERSION);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,100),{once:true});else setTimeout(init,100);
 })();

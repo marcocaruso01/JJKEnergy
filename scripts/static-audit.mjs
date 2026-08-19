@@ -59,14 +59,14 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a|20260801s404a|20260801s404b|20260819s405a)/.test(index)) {
-  fail('index.html does not use an approved V39.7-V40.5 sfx cache key.');
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a|20260801s404a|20260801s404b|20260819s405a|20260819s406a)/.test(index)) {
+  fail('index.html does not use an approved V39.7-V40.6 sfx cache key.');
 }
 
 const sfx = read('sfx.js');
-if (!/v394-technique-fix\.js\?v=20260727v397b/.test(sfx)) fail('sfx.js does not load the latest exact technique identity fix.');
+if (!/v394-technique-fix\.js\?v=20260819v406a/.test(sfx)) fail('sfx.js does not load the latest exact technique identity fix.');
 if (!/v397-runtime-guards\.js\?v=20260819v405a/.test(sfx)) fail('sfx.js does not load the V39.7 runtime guards.');
-if (!/v398-itadori-variable-rules\.js\?v=20260728v398a/.test(sfx)) fail('sfx.js does not load the V39.8 Itadori and variable-technique rules.');
+if (!/v398-itadori-variable-rules\.js\?v=20260819v406a/.test(sfx)) fail('sfx.js does not load the V39.8 Itadori and variable-technique rules.');
 if (!/v399-itadori-ui-progression\.js\?v=20260819v405a/.test(sfx)) fail('sfx.js does not load the V39.9.1 Itadori UI, controls and progression fixes.');
 if (!/v396-jogo-ui-cleanup\.js\?v=20260819v405a/.test(sfx)) fail('sfx.js does not load the latest Jogo UI cleanup.');
 if (!/v400-counter-domain-fixes\.js\?v=20260819v405a/.test(sfx)) fail('sfx.js does not load the V40 counter and Domain fixes.');
@@ -75,21 +75,18 @@ if (!/v403-performance-android\.js\?v=20260819v405a/.test(sfx)) fail('sfx.js doe
 if (/v365-late-technique-ui\.js|v393-stability\.js/.test(sfx)) fail('sfx.js still loads an obsolete conflicting patch.');
 
 
-const runtime405 = read('v405-event-runtime.js');
-if (!/strict event-driven runtime coordinator/.test(runtime405) || !/classifyLegacyInterval/.test(runtime405)) {
-  fail('V40.5 strict event-driven runtime coordinator is missing.');
+const runtime406 = read('v406-event-runtime.js');
+if (!/deep source event-driven runtime coordinator/.test(runtime406) || !/classifyLegacyInterval/.test(runtime406)) {
+  fail('V40.6 deep event-driven runtime coordinator is missing.');
 }
-if (!/<meta name=["']viewport["'][^>]*>\s*<script src=["']v405-event-runtime\.js\?v=20260819v405a["']><\/script>/.test(index)) {
-  fail('V40.5 must load in the document head before legacy scripts.');
+if (!/<meta name=["']viewport["'][^>]*>\s*<script src=["']v406-event-runtime\.js\?v=20260819v406a["']><\/script>/.test(index)) {
+  fail('V40.6 must load in the document head before legacy scripts.');
 }
-if (!/HEAVY_FILES\.has\(file\)/.test(runtime405) || !/legacyNativeIntervals/.test(runtime405)) {
-  fail('V40.5 does not prevent unclassified legacy polling from escaping natively.');
+if (!/HEAVY_FILES\.has\(file\)/.test(runtime406) || !/legacyNativeIntervals/.test(runtime406)) {
+  fail('V40.6 does not retain the V40.5 legacy-poll safety net.');
 }
-if (!/blockedObservers/.test(runtime405) || !/NativeMutationObserver/.test(runtime405)) {
-  fail('V40.5 does not suppress obsolete body-wide observers.');
-}
-if (!/function schedule\(/.test(runtime405) || !/blocked=new Map/.test(runtime405)) {
-  fail('V40.5 does not coordinate legacy refresh callbacks through events.');
+if (!/root\.JJKV405=root\.JJKV406/.test(runtime406) || !/root\.JJKV404=root\.JJKV406/.test(runtime406)) {
+  fail('V40.6 does not preserve V40.4/V40.5 runtime compatibility.');
 }
 
 
@@ -102,6 +99,24 @@ for (const file of ['v396-jogo-ui-cleanup.js','v397-runtime-guards.js','v399-ita
 const multiplayer405 = read('supabase-multiplayer.js');
 if (!/snapshotSignature/.test(multiplayer405) || !/lastSnapshotSignature/.test(multiplayer405)) fail('V40.5 multiplayer does not deduplicate unchanged snapshots.');
 if (!/60000/.test(multiplayer405) || /setInterval\(\(\)=>refreshRoom\(false\),5000\)/.test(multiplayer405)) fail('V40.5 multiplayer still performs the old 5-second full-room poll.');
+
+
+// V40.6: these loaded modules must be genuinely event-driven at source.
+for (const file of ['v37-update.js','v362-rules-hotfix.js','v392-gameplay.js','v394-technique-fix.js','v398-itadori-variable-rules.js','gameplay-v25.js','events-v26.js','events-v26-2.js','gm-ai.js']) {
+  const source = read(file);
+  if (/setInterval\s*\(/.test(source)) fail(`${file} still contains unconditional recurring UI work after the V40.6 refactor.`);
+  if (!/jjk:runtime-scheduled/.test(source)) fail(`${file} is not connected to V40.6 runtime events.`);
+}
+const v36Source = read('v36-update.js');
+if (/setInterval\(update,1200\)/.test(v36Source)) fail('V36 still polls the permanent Body guard UI.');
+if (/setInterval\(renderOtherSheets,2500\)/.test(v36Source)) fail('V36 still polls other-player sheets instead of reacting to room events.');
+if (/setInterval\(\(\)=>\{updateOtherSheetsButton\(\);injectJogoQuickControls\(\);\},1500\)/.test(v36Source)) fail('V36 still performs the general 1.5s UI refresh loop.');
+if (!/bindRuntimeRefresh/.test(v36Source) || !/jjk:runtime-scheduled/.test(v36Source)) fail('V36 local UI is not connected to runtime events.');
+if (!/setInterval\(refreshSpectator,3000\)/.test(v36Source)) fail('V36 spectator network fallback was removed accidentally.');
+if (!/setInterval\(heartbeat,20000\)/.test(v36Source)) fail('V36 presence heartbeat was removed accidentally.');
+if (!/setInterval\(\(\)=>loadOnline\(true\),15000\)/.test(v36Source)) fail('V36 online presence fallback was removed accidentally.');
+if (!/gameplay-v25\.js\?v=20260819v406a/.test(index) || !/events-v26\.js\?v=20260819v406a/.test(index) || !/events-v26-2\.js\?v=20260819v406a/.test(index) || !/v37-update\.js\?v=20260819v406a/.test(index)) fail('index.html does not use the V40.6 source-refactor cache keys.');
+if (!/v36-update\.js\?v=20260819v406a/.test(read('gm-ai.js'))) fail('GM AI does not load the V40.6 V36 source refactor.');
 
 const exactTechniqueFix = read('v394-technique-fix.js');
 if (/available\s*\[\s*i\s*\]/.test(exactTechniqueFix)) fail('Technique fix still contains positional available[i] mapping.');
