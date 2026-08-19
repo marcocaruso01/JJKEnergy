@@ -42,14 +42,14 @@ function boot(){installAudio();[
  ['v363-copy-complete.js?v=20260725v363','jjk-v363-copy'],
  ['v364-pretty-technique-inputs.js?v=20260725v364b','jjk-v364-inputs'],
  ['v394-technique-fix.js?v=20260727v397b','jjk-v397-technique-fix'],
- ['v397-runtime-guards.js?v=20260727v397a','jjk-v397-runtime-guards'],
+ ['v397-runtime-guards.js?v=20260819v405a','jjk-v397-runtime-guards'],
  ['v392-gameplay.js?v=20260726v392b','jjk-v392-gameplay'],
  ['v398-itadori-variable-rules.js?v=20260728v398a','jjk-v398-itadori-variable-rules'],
- ['v399-itadori-ui-progression.js?v=20260728v399b','jjk-v399-itadori-ui-progression'],
- ['v396-jogo-ui-cleanup.js?v=20260727v397b','jjk-v397-jogo-ui'],
- ['v400-counter-domain-fixes.js?v=20260728v400a','jjk-v400-counter-domain-fixes'],
- ['v401-jogo-counter-stability.js?v=20260728v402a','jjk-v402-jogo-single-state'],
- ['v403-performance-android.js?v=20260730v403a','jjk-v403-performance-android'],
+ ['v399-itadori-ui-progression.js?v=20260819v405a','jjk-v399-itadori-ui-progression'],
+ ['v396-jogo-ui-cleanup.js?v=20260819v405a','jjk-v397-jogo-ui'],
+ ['v400-counter-domain-fixes.js?v=20260819v405a','jjk-v400-counter-domain-fixes'],
+ ['v401-jogo-counter-stability.js?v=20260819v405a','jjk-v402-jogo-single-state'],
+ ['v403-performance-android.js?v=20260819v405a','jjk-v403-performance-android'],
  ['v403-player-resource-queue.js?v=20260730v403a','jjk-v403-player-resource-queue']
 ].forEach(([src,key])=>loadScript(src,key));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();

@@ -222,7 +222,7 @@ function install(){
   if(root.__JJK_V403_INSTALLED__)return;root.__JJK_V403_INSTALLED__=true;
   const start=()=>{
     bind();setTimeout(bind,500);setTimeout(bind,1800);setTimeout(()=>{bind();audit();},2800);
-    setInterval(()=>{if(!document.hidden)bind();},3000);
+    root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all','rebind'].includes(kind)&&!document.hidden)bind();},{passive:true});root.addEventListener('pageshow',()=>{if(!document.hidden)bind();},{passive:true});root.addEventListener('focus',()=>{if(!document.hidden)bind();},{passive:true});
     console.info('JJK Energy performance and Android fixes ready',VERSION);
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();

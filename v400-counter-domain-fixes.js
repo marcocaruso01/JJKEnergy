@@ -226,7 +226,7 @@ function install(){
   const wait=attempt=>{
     if((!root.__JJK_V398_INSTALLED__||!root.__JJK_V399_INSTALLED__||!root.__JJK_V396_JOGO_UI__)&&attempt<100){setTimeout(()=>wait(attempt+1),50);return;}
     bind();setTimeout(bind,200);setTimeout(()=>{bind();audit();},900);
-    setInterval(()=>{patchTechniques();patchRefreshHooks();stabilizeItadoriCounter();updateJogoCounter(false);},250);
+    root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(!['state','remote','screen','all','rebind'].includes(kind)||document.hidden)return;setTimeout(()=>{patchTechniques();patchRefreshHooks();stabilizeItadoriCounter();updateJogoCounter(false);},0);},{passive:true});root.addEventListener('pageshow',()=>setTimeout(bind,0),{passive:true});
     console.info('JJK Energy V40 counter/domain fixes ready',VERSION);
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>wait(0),{once:true});else wait(0);
