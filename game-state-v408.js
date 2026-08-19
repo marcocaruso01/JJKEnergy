@@ -15,7 +15,7 @@ const ROOM_FIELDS=Object.freeze([
   'characterId','gradeId','energy','exp','life','maxLife','tokens','combatBonus','jogoLife','jogoHeat',
   'getoOneUse','tojiCollectedEnergy','megumiCompanionOn','itadoriFingers','itadoriMaxFingers','itadoriOneUse',
   'yutaKatanaActive','yutaCopiedTechnique','yutaCopiedTokens','yutaCopiedVigor','yutaCopiedFingers',
-  'yutaCopiedMaxFingers','yutaCopiedHeat','bossRushActive','used','log','updatedAt'
+  'yutaCopiedMaxFingers','yutaCopiedHeat','bossRushActive','used','log','updatedAt','pvpPoints'
 ]);
 let buildingRoomSnapshot=false;
 
