@@ -72,7 +72,7 @@ test('catalog remains live after gameplay patches mutate authoritative character
   expect(result.sameJogo).toBe(true);
   expect(result.itadoriBody).toBe(4);
   expect(result.jogoLife).toBe(8);
-  expect(result.fingerTechnique).toBe('Richiamo dell’Anima di Sukuna');
+  expect(result.fingerTechnique).toBe("(Dominio) Richiamo dell'Anima di Sukuna");
 });
 
 test('opening a character still uses the same authoritative object exposed by the catalog', async ({ page }) => {
