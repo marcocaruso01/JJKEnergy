@@ -65,14 +65,14 @@ test('catalog remains live after gameplay patches mutate authoritative character
       sameJogo:catalog.get('jogo')===legacy.jogo,
       itadoriBody:catalog.get('itadori').baseBody,
       jogoLife:catalog.get('jogo').maxLife,
-      fingerTechnique:catalog.technique('itadori','richiamo_anima_sukuna')?.name||''
+      sameFingerTechnique:catalog.technique('itadori','richiamo_anima_sukuna')===legacy.itadori.techniques.find(item=>item.key==='richiamo_anima_sukuna')
     };
   });
   expect(result.sameItadori).toBe(true);
   expect(result.sameJogo).toBe(true);
   expect(result.itadoriBody).toBe(4);
   expect(result.jogoLife).toBe(8);
-  expect(result.fingerTechnique).toBe("(Dominio) Richiamo dell'Anima di Sukuna");
+  expect(result.sameFingerTechnique).toBe(true);
 });
 
 test('opening a character still uses the same authoritative object exposed by the catalog', async ({ page }) => {
