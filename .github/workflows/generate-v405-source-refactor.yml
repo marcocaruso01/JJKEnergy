@@ -6,6 +6,9 @@ on:
     paths:
       - 'scripts/refactor-v405.py'
       - '.github/workflows/generate-v405-source-refactor.yml'
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
@@ -17,7 +20,7 @@ concurrency:
 
 jobs:
   generate:
-    if: github.actor != 'github-actions[bot]'
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.ref == 'agent/v405-source-event-refactor'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -58,7 +61,7 @@ jobs:
         run: npm run test:e2e
 
       - name: Commit exact tested version
-        if: success()
+        if: success() && github.actor != 'github-actions[bot]'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
