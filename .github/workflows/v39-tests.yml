@@ -28,6 +28,8 @@ jobs:
           node --check legacy-bridge-v408.js
           node --check game-state-v408.js
           node --check battle-engine-v409.js
+          node --check battle-practice-v410.js
+          node --check battle-ui-v410.js
       - name: Rule tests
         run: |
           node tests/v39-rules.test.js
