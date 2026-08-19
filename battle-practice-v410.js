@@ -16,6 +16,10 @@ const clone=value=>{
   try{return JSON.parse(JSON.stringify(value));}catch(_){return value;}
 };
 const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
+const optionalNumber=value=>{
+  if(value===undefined||value===null||value==='')return null;
+  const parsed=Number(value);return Number.isFinite(parsed)?parsed:null;
+};
 const nonNegative=(value,fallback=0)=>Math.max(0,number(value,fallback));
 const strings=value=>[...new Set((Array.isArray(value)?value:[]).map(item=>String(item)))];
 const now=()=>new Date().toISOString();
@@ -62,7 +66,7 @@ function techniqueSupport(technique){
   if(technique.dynamicCost||technique.itadoriBlackFlash||technique.convertAllEnergy||technique.instantWin||technique.yutaDomain||technique.yutaCopy||technique.yutaReverse||technique.yutaKatana||technique.getoDarkTokens||technique.itadoriChoso||technique.resetFingers){
     return {supported:false,kind:'special'};
   }
-  const hasBonus=Number.isFinite(Number(technique.bonus));
+  const hasBonus=optionalNumber(technique.bonus)!==null;
   const hasHeal=nonNegative(technique.heal)>0;
   if(!hasBonus&&!hasHeal)return {supported:false,kind:'special'};
   return {supported:true,kind:hasBonus?'combat':'support',partial:!!(technique.effect||technique.extra)};
@@ -127,7 +131,7 @@ function createSession(playerCharacterId,opponentCharacterId,options={}){
     if(healed)raw.life=Math.min(nonNegative(raw.maxLife),raw.life+healed);
     if(raw.characterId==='jogo')raw.energy=raw.life;
     if(!raw.used.includes(String(technique.key)))raw.used.push(String(technique.key));
-    const bonus=Number.isFinite(Number(technique.bonus))?Number(technique.bonus):null;
+    const bonus=optionalNumber(technique.bonus);
     const score=bonus===null?null:before.body+bonus;
     const action={
       side,characterId:raw.characterId,techniqueKey:String(technique.key),techniqueName:String(technique.name||technique.key),
