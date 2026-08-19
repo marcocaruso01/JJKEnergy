@@ -59,8 +59,8 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a|20260801s404a|20260801s404b|20260819s405a|20260819s406a|20260819s407a)/.test(index)) {
-  fail('index.html does not use an approved V39.7-V40.7 sfx cache key.');
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a|20260801s404a|20260801s404b|20260819s405a|20260819s406a|20260819s407a|20260819s408a)/.test(index)) {
+  fail('index.html does not use an approved V39.7-V40.8 sfx cache key.');
 }
 
 const catalog407 = read('character-catalog-v407.js');
@@ -70,12 +70,33 @@ if (!/Character Catalog foundation/.test(catalog407) || !/function legacyCharact
 if (!/Object\.freeze\(\{version:VERSION,ids,has,get,entries,legacy,technique,grade,validate,audit\}\)/.test(catalog407)) {
   fail('V40.7 Character Catalog API is incomplete.');
 }
-if (!/sfx\.js\?v=20260819s407a/.test(index)) {
-  fail('index.html does not activate the V40.7 loader cache key.');
+if (!/sfx\.js\?v=20260819s408a/.test(index)) {
+  fail('index.html does not activate the V40.8 loader cache key.');
+}
+
+const legacyBridge408 = read('legacy-bridge-v408.js');
+if (!/legacy state bridge/.test(legacyBridge408) || !/function read\(name\)/.test(legacyBridge408) || !/function write\(name,value\)/.test(legacyBridge408)) {
+  fail('V40.8 Legacy Bridge foundation is missing.');
+}
+if (/localStorage\./.test(legacyBridge408) || /setInterval\s*\(/.test(legacyBridge408)) {
+  fail('V40.8 Legacy Bridge must not create a second persisted or polling state source.');
+}
+const gameState408 = read('game-state-v408.js');
+if (!/semantic game state facade/.test(gameState408) || !/function roomSnapshot/.test(gameState408) || !/function patch\(values,options=\{\}\)/.test(gameState408)) {
+  fail('V40.8 Game State facade is incomplete.');
+}
+if (/setInterval\s*\(/.test(gameState408)) {
+  fail('V40.8 Game State must remain event-driven.');
 }
 
 const sfx = read('sfx.js');
 if (!/character-catalog-v407\.js\?v=20260819v407a/.test(sfx)) fail('sfx.js does not load the V40.7 Character Catalog before gameplay patches.');
+const v408CatalogLoader = sfx.indexOf('character-catalog-v407.js?v=20260819v407a');
+const v408BridgeLoader = sfx.indexOf('legacy-bridge-v408.js?v=20260819v408a');
+const v408StateLoader = sfx.indexOf('game-state-v408.js?v=20260819v408a');
+if (!(v408CatalogLoader >= 0 && v408BridgeLoader > v408CatalogLoader && v408StateLoader > v408BridgeLoader)) {
+  fail('sfx.js must load Character Catalog, Legacy Bridge and Game State in that order.');
+}
 if (!/v394-technique-fix\.js\?v=20260819v406a/.test(sfx)) fail('sfx.js does not load the latest exact technique identity fix.');
 if (!/v397-runtime-guards\.js\?v=20260819v405a/.test(sfx)) fail('sfx.js does not load the V39.7 runtime guards.');
 if (!/v398-itadori-variable-rules\.js\?v=20260819v406a/.test(sfx)) fail('sfx.js does not load the V39.8 Itadori and variable-technique rules.');
