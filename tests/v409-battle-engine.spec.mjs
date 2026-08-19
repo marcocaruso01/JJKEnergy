@@ -54,7 +54,7 @@ test('practice fighters are isolated snapshots and never replace the live charac
       },
       liveIdBefore: before.currentId,
       liveIdAfter: after.currentId,
-      exactLiveCharacter: after.current === window.JJKCharacterCatalog.get('gojo'),
+      exactLiveCharacter: state.get('current') === window.JJKCharacterCatalog.get('gojo'),
       stateUnchanged: window.JJKGameState.fields.every(name => {
         try { return JSON.stringify(before[name]) === JSON.stringify(after[name]); }
         catch (_) { return before[name] === after[name]; }
@@ -74,31 +74,37 @@ test('practice fighters are isolated snapshots and never replace the live charac
   expect(result.stateUnchanged).toBe(true);
 });
 
-test('practice technique visibility mirrors the current Itadori finger gate without mutating live state', async ({ page }) => {
-  await openCharacter(page, 'gojo');
+test('practice technique visibility mirrors the current Itadori runtime blueprint without mutating live state', async ({ page }) => {
+  await openCharacter(page, 'itadori');
   const result = await page.evaluate(() => {
-    const character = window.JJKCharacterCatalog.get('itadori');
-    const fingerTechnique = character.techniques.find(item => item.fingerOnly && !item.instantWin) || character.techniques.find(item => item.fingerOnly);
-    if (!fingerTechnique) return { missing: true };
-    const required = Number(fingerTechnique.fingerReq) || 0;
-    const locked = window.JJKBattleEngine.practiceFighter('itadori', { gradeId: 'G4', itadoriMaxFingers: Math.max(0, required - 1) });
-    const unlocked = window.JJKBattleEngine.practiceFighter('itadori', { gradeId: 'G4', itadoriMaxFingers: required });
-    const lockedView = locked.techniques.find(item => item.key === fingerTechnique.key);
-    const unlockedView = unlocked.techniques.find(item => item.key === fingerTechnique.key);
+    const state = window.JJKGameState;
+    const before = state.snapshot();
+    const live = window.JJKBattleEngine.liveFighter();
+    const practice = window.JJKBattleEngine.practiceFighter('itadori', {
+      gradeId: live.gradeId,
+      energy: live.resource.current,
+      resourceMax: live.resource.max,
+      itadoriFingers: live.special.itadoriFingers,
+      itadoriMaxFingers: live.special.itadoriMaxFingers
+    });
+    const after = state.snapshot();
     return {
-      missing: false,
-      key: fingerTechnique.key,
-      required,
-      locked: lockedView.unlocked,
-      unlocked: unlockedView.unlocked,
-      liveId: window.JJKGameState.get('currentId')
+      catalogCount: window.JJKCharacterCatalog.get('itadori').techniques.length,
+      liveEligibility: live.techniques.map(item => ({ key: item.key, unlocked: item.unlocked })),
+      practiceEligibility: practice.techniques.map(item => ({ key: item.key, unlocked: item.unlocked })),
+      exactPracticeCharacter: practice.character === window.JJKCharacterCatalog.get('itadori'),
+      exactLiveCharacter: state.get('current') === window.JJKCharacterCatalog.get('itadori'),
+      stateUnchanged: window.JJKGameState.fields.every(name => {
+        try { return JSON.stringify(before[name]) === JSON.stringify(after[name]); }
+        catch (_) { return before[name] === after[name]; }
+      })
     };
   });
-  expect(result.missing).toBe(false);
-  expect(result.required).toBeGreaterThan(0);
-  expect(result.locked).toBe(false);
-  expect(result.unlocked).toBe(true);
-  expect(result.liveId).toBe('gojo');
+  expect(result.catalogCount).toBeGreaterThan(0);
+  expect(result.practiceEligibility).toEqual(result.liveEligibility);
+  expect(result.exactPracticeCharacter).toBe(true);
+  expect(result.exactLiveCharacter).toBe(true);
+  expect(result.stateUnchanged).toBe(true);
 });
 
 test('live fighter technique unlocks delegate to the authoritative legacy rule', async ({ page }) => {
