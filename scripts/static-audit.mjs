@@ -59,11 +59,23 @@ note(`Checked ${assetRefs.size} direct asset references.`);
 if (/v365-late-technique-ui\.js/i.test(index) || /v393-stability\.js/i.test(index)) {
   fail('index.html still loads a known conflicting technique dispatcher.');
 }
-if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a|20260801s404a|20260801s404b|20260819s405a|20260819s406a)/.test(index)) {
-  fail('index.html does not use an approved V39.7-V40.6 sfx cache key.');
+if (!/sfx\.js\?v=(?:20260727s397[ab]|20260728s398a|20260728s399[ab]|20260728s400a|20260728s401a|20260728s402a|20260730s403a|20260801s404a|20260801s404b|20260819s405a|20260819s406a|20260819s407a)/.test(index)) {
+  fail('index.html does not use an approved V39.7-V40.7 sfx cache key.');
+}
+
+const catalog407 = read('character-catalog-v407.js');
+if (!/Character Catalog foundation/.test(catalog407) || !/function legacyCharacters/.test(catalog407)) {
+  fail('V40.7 Character Catalog foundation is missing.');
+}
+if (!/Object\.freeze\(\{version:VERSION,ids,has,get,entries,legacy,technique,grade,validate,audit\}\)/.test(catalog407)) {
+  fail('V40.7 Character Catalog API is incomplete.');
+}
+if (!/sfx\.js\?v=20260819s407a/.test(index)) {
+  fail('index.html does not activate the V40.7 loader cache key.');
 }
 
 const sfx = read('sfx.js');
+if (!/character-catalog-v407\.js\?v=20260819v407a/.test(sfx)) fail('sfx.js does not load the V40.7 Character Catalog before gameplay patches.');
 if (!/v394-technique-fix\.js\?v=20260819v406a/.test(sfx)) fail('sfx.js does not load the latest exact technique identity fix.');
 if (!/v397-runtime-guards\.js\?v=20260819v405a/.test(sfx)) fail('sfx.js does not load the V39.7 runtime guards.');
 if (!/v398-itadori-variable-rules\.js\?v=20260819v406a/.test(sfx)) fail('sfx.js does not load the V39.8 Itadori and variable-technique rules.');
