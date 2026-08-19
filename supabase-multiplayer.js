@@ -6,7 +6,7 @@ const SUPABASE_URL='https://yadsmiwjoyaiemlzkomd.supabase.co';
 const SUPABASE_KEY='sb_publishable_x6ESBbVZ_IhmfnePfN8tDQ_ADAcpuJ6';
 const RESUME_KEY='jjk_supabase_room_resume_v1';
 const CLIENT_KIND=document.documentElement.classList.contains('mobile')||/Mobile|iPhone|Android/i.test(navigator.userAgent)?'mobile':'desktop';
-let sb=null, currentUser=null, channel=null, pollTimer=null, heartbeatTimer=null, refreshTimer=null, saveTimer=null, stateWritePromise=Promise.resolve(), stateVersion=0, lastAppliedStateVersion=0, lastLocalBossRush=null, adapterReady=false, refreshing=false, lifecycleBound=false, authPromise=null;
+let sb=null, currentUser=null, channel=null, pollTimer=null, heartbeatTimer=null, refreshTimer=null, saveTimer=null, stateWritePromise=Promise.resolve(), stateVersion=0, lastAppliedStateVersion=0, lastLocalBossRush=null, lastSnapshotSignature='', adapterReady=false, refreshing=false, lifecycleBound=false, authPromise=null;
 
 /*
   The original application declares roomSession with top-level `let`.
@@ -71,9 +71,19 @@ function saveResume(){
 }
 function clearResume(){localStorage.removeItem(RESUME_KEY);}
 function parseTime(v){const n=v?Date.parse(v):NaN;return Number.isFinite(n)?n:null;}
+function snapshotSignature(snap){
+  if(!snap?.room)return '';
+  const room=snap.room;
+  const players=(snap.players||[]).filter(p=>!p.left_at&&!p.kicked_at).map(p=>[p.id,p.character_id||'',p.is_host?1:0,p.is_connected===false?0:1,p.is_locked?1:0,p.self_manage===false?0:1,p.energy_discount?1:0,p.has_eye?1:0,p.boss_rush?1:0,Number(p.turn_order)||0,Number(p.state_version)||0,p.state_updated_at||''].join(':')).sort().join('|');
+  const events=(snap.events||[]).map(e=>[e.id||'',e.event_type||e.type||'',e.status||'',e.updated_at||e.created_at||''].join(':')).sort().join('|');
+  return [room.id||'',room.status||'',room.updated_at||'',JSON.stringify(room.settings||{}),JSON.stringify(room.winner_data||{}),players,events].join('#');
+}
 function mapSnapshot(snap, previousPhase){
   if(!snap?.room)return null;
   const previousSession=getRoomSession();
+  const signature=snapshotSignature(snap);
+  if(signature&&signature===lastSnapshotSignature&&previousSession){previousSession.serverTime=snap.server_time;return previousSession;}
+  lastSnapshotSignature=signature;
   const r=snap.room;
   const players=(snap.players||[]).filter(p=>!p.left_at&&!p.kicked_at).map(p=>{
     const stateUpdatedAt=parseTime(p.state_updated_at);
@@ -173,7 +183,7 @@ async function refreshRoom(force=false){
 }
 function scheduleRefresh(delay=80){clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refreshRoom(false),delay);}
 function stopRealtime(){
-  if(channel&&sb){try{sb.removeChannel(channel);}catch(e){}} channel=null;
+  if(channel&&sb){try{sb.removeChannel(channel);}catch(e){}} channel=null;lastSnapshotSignature='';
   clearInterval(pollTimer);clearInterval(heartbeatTimer);clearTimeout(refreshTimer);clearTimeout(saveTimer);
   pollTimer=heartbeatTimer=refreshTimer=saveTimer=null;
 }
@@ -187,7 +197,7 @@ function startRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'player_states',filter:'room_id=eq.'+rid},()=>scheduleRefresh(40))
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'room_events',filter:'room_id=eq.'+rid},()=>scheduleRefresh(60))
     .subscribe(status=>{if(status==='SUBSCRIBED')scheduleRefresh(10);});
-  pollTimer=setInterval(()=>refreshRoom(false),5000);
+  pollTimer=setInterval(()=>{if(document.visibilityState==='visible'&&navigator.onLine)refreshRoom(false);},60000);
   heartbeatTimer=setInterval(async()=>{const hs=getRoomSession();if(!hs?.roomId)return;try{await rpc('jjk_heartbeat',{p_room_id:hs.roomId});if(hs.isHost)await rpc('jjk_mark_stale_players',{p_room_id:hs.roomId,p_timeout_seconds:120});}catch(e){console.warn('heartbeat',e);}},20000);
   if(!lifecycleBound){
     lifecycleBound=true;

@@ -114,7 +114,7 @@ function start(){
     });
     observer.observe(panel,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','disabled']});
   }
-  setInterval(()=>clean(false),2200);
+  root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all'].includes(kind)&&!document.hidden)setTimeout(()=>clean(false),0);},{passive:true});root.addEventListener('pageshow',()=>setTimeout(()=>clean(true),0),{passive:true});
   root.JJKV396={version:VERSION,clean};
   console.info('JJK Energy Jogo UI cleanup ready',VERSION);
 }

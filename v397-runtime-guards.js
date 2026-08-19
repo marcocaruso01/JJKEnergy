@@ -32,7 +32,7 @@ function start(){
   setTimeout(install,80);
   setTimeout(install,350);
   setTimeout(install,1200);
-  setInterval(install,2200);
+  root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all','rebind'].includes(kind)&&!document.hidden)setTimeout(install,0);},{passive:true});root.addEventListener('pageshow',()=>setTimeout(install,0),{passive:true});
   console.info('JJK Energy runtime guards ready',VERSION);
 }
 

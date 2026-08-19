@@ -147,7 +147,7 @@ function bind(){ensureStyle();wrapUseTechnique();wrapSnapshot();wrapBuildState()
 function audit(){const checks={version:VERSION,singlePanel:!!document.getElementById('v402JogoPanel')||cid()!=='jogo',canonicalState:Number.isFinite(state.volcanoes)&&Number.isFinite(state.craters)};checks.ok=Object.entries(checks).filter(([key])=>!['version','ok'].includes(key)).every(([,value])=>value===true);root.JJKV401Audit=checks;root.JJKV402Audit=checks;return checks;}
 function install(){
   if(root.__JJK_V402_INSTALLED__)return;root.__JJK_V401_INSTALLED__=true;root.__JJK_V402_INSTALLED__=true;
-  const wait=attempt=>{if(!root.__JJK_V400_INSTALLED__&&attempt<100){setTimeout(()=>wait(attempt+1),50);return;}bind();setTimeout(bind,200);setTimeout(()=>{bind();audit();},900);setInterval(()=>{bind();watchTurn();if(cid()==='jogo'){syncGlobals();render(false);}},250);console.info('JJK Energy single Jogo state ready',VERSION);};
+  const wait=attempt=>{if(!root.__JJK_V400_INSTALLED__&&attempt<100){setTimeout(()=>wait(attempt+1),50);return;}bind();setTimeout(bind,200);setTimeout(()=>{bind();audit();},900);root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(!['state','remote','screen','all','rebind'].includes(kind)||document.hidden)return;setTimeout(()=>{bind();watchTurn();if(cid()==='jogo'){syncGlobals();render(false);}},0);},{passive:true});root.addEventListener('pageshow',()=>setTimeout(()=>{bind();watchTurn();if(cid()==='jogo'){syncGlobals();render(false);}},0),{passive:true});console.info('JJK Energy single Jogo state ready',VERSION);};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>wait(0),{once:true});else wait(0);
 }
 

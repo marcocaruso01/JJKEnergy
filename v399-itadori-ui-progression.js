@@ -248,7 +248,7 @@ function install(){
   if(root.__JJK_V399_INSTALLED__)return;root.__JJK_V399_INSTALLED__=true;
   const wait=attempt=>{
     if(!root.__JJK_V398_INSTALLED__&&attempt<80){setTimeout(()=>wait(attempt+1),50);return;}
-    bind();setTimeout(bind,150);setTimeout(bind,600);setTimeout(()=>{bind();audit();},1500);setInterval(bind,700);
+    bind();setTimeout(bind,150);setTimeout(bind,600);setTimeout(()=>{bind();audit();},1500);root.addEventListener('jjk:runtime-scheduled',event=>{const kind=event.detail?.kind||'state';if(['state','remote','screen','all','rebind'].includes(kind)&&!document.hidden)setTimeout(bind,0);},{passive:true});root.addEventListener('pageshow',()=>setTimeout(bind,0),{passive:true});
     console.info('JJK Energy Itadori UI/progression ready',VERSION);
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>wait(0),{once:true});else wait(0);
