@@ -38,6 +38,7 @@ window.JJKSfx={play,setEnabled(value){enabled=!!value;storageSet(STORAGE_KEY,ena
 const voiceRegistry=new Map();let activeVoice=null;window.JJKVoice={register(characterId,context,src){if(characterId&&context&&src)voiceRegistry.set(characterId+':'+context,src);},has(characterId,context='select'){return voiceRegistry.has(characterId+':'+context);},play(characterId,context='select'){const src=voiceRegistry.get(characterId+':'+context);if(!src)return false;try{activeVoice?.pause();activeVoice=new Audio(src);activeVoice.volume=.72*volume;activeVoice.play().catch(()=>{});return true;}catch(_){return false;}},stop(){try{activeVoice?.pause();}catch(_){}activeVoice=null;}};
 function loadScript(src,key){if(document.querySelector('script[data-'+key+']'))return;const script=document.createElement('script');script.src=src;script.async=false;script.setAttribute('data-'+key,'1');script.onerror=()=>console.error('JJK Energy: caricamento fallito',src);document.head.appendChild(script);}
 function boot(){installAudio();[
+ ['character-catalog-v407.js?v=20260819v407a','jjk-v407-character-catalog'],
  ['v362-rules-hotfix.js?v=20260819v406a','jjk-v362-rules'],
  ['v363-copy-complete.js?v=20260725v363','jjk-v363-copy'],
  ['v364-pretty-technique-inputs.js?v=20260725v364b','jjk-v364-inputs'],
